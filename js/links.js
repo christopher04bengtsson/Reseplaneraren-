@@ -1,0 +1,80 @@
+/*
+ * Länkar till Booking och Airbnb (SPEC.md, "Länkar till bokningssajterna").
+ *
+ * OBS: parametrarna nedan är kända från sajternas egna sökadresser men är
+ * INTE verifierade ännu. Steg 9 i byggordningen är att testa dem en och en
+ * i webbläsaren och flytta det som inte fungerar till checklistan.
+ */
+(function (root) {
+  'use strict';
+
+  // Booking: boendetyp via nflt=ht_id=… (204 hotell, 220 semesterhus, 201 lägenhet)
+  const BOOKING_HT = { hotel: 204, house: 220, apartment: 201 };
+  const CHILD_AGE = 8; // Booking kräver ålder per barn; standardval tills vi frågar
+
+  function query(area, dest) {
+    const name = area.name.split(' – ')[0];
+    return `${name}, ${dest.name}`;
+  }
+
+  function booking(area, dest, ctx) {
+    const p = new URLSearchParams();
+    p.set('ss', query(area, dest));
+    if (ctx.dates.checkin) p.set('checkin', ctx.dates.checkin);
+    if (ctx.dates.checkout) p.set('checkout', ctx.dates.checkout);
+    p.set('group_adults', String(ctx.rooms.adults));
+    p.set('group_children', String(ctx.rooms.children));
+    for (let i = 0; i < ctx.rooms.children; i++) p.append('age', String(CHILD_AGE));
+    const onlyHotel = ctx.lodging.length === 1 && ctx.lodging[0] === 'hotel';
+    p.set('no_rooms', String(onlyHotel ? ctx.rooms.bedrooms : 1));
+    p.set('selected_currency', 'SEK');
+    const nflt = ctx.lodging.map((k) => `ht_id=${BOOKING_HT[k]}`);
+    if (!onlyHotel) nflt.push(`entire_place_bedroom_count=${ctx.rooms.bedrooms}`);
+    if (nflt.length) p.set('nflt', nflt.join(';'));
+    return 'https://www.booking.com/searchresults.sv.html?' + p.toString();
+  }
+
+  function airbnb(area, dest, ctx) {
+    const slug = encodeURIComponent(query(area, dest).replace(/, /g, '--').replace(/ /g, '-'));
+    const p = new URLSearchParams();
+    if (ctx.dates.checkin) p.set('checkin', ctx.dates.checkin);
+    if (ctx.dates.checkout) p.set('checkout', ctx.dates.checkout);
+    p.set('adults', String(ctx.rooms.adults));
+    if (ctx.rooms.children) p.set('children', String(ctx.rooms.children));
+    p.set('min_bedrooms', String(ctx.rooms.bedrooms));
+    p.set('min_beds', String(ctx.rooms.beds));
+    const types = [];
+    if (ctx.lodging.includes('house') || ctx.lodging.includes('apartment')) types.push('Entire home/apt');
+    if (ctx.lodging.includes('hotel')) types.push('Hotel room');
+    types.forEach((t) => p.append('room_types[]', t));
+    if (ctx.budgetPPN > 0 && ctx.dates.nights) {
+      // Airbnb filtrerar på pris per natt för hela boendet
+      p.set('price_max', String(Math.round(ctx.budgetPPN * ctx.rooms.total)));
+    }
+    return `https://www.airbnb.se/s/${slug}/homes?` + p.toString();
+  }
+
+  /** Det som inte går att skicka med i länken – bockas av för hand. */
+  function checklist(area, dest, ctx, prefs) {
+    const S = root.RP.scoring;
+    const list = [];
+    if (ctx.dates.flex === 'pm3') list.push('Välj flexibla datum ± 3 dagar på sajten');
+    if (ctx.dates.flex === 'month') {
+      list.push(`Välj ${ctx.dates.nights} nätter någon gång i ${S.MONTHS[ctx.dates.months[0]]}`);
+    }
+    if (ctx.rooms.doubleBeds) list.push(`Minst ${ctx.rooms.doubleBeds} dubbelsängar för paren`);
+    if (Number(prefs.group.ownRoom)) list.push(`${prefs.group.ownRoom} st vill ha eget rum`);
+    if (ctx.budgetPPN > 0) {
+      list.push(`Budget ca ${S.formatKr(ctx.budgetPPN)} per person och natt (Booking: ställ in pris själv)`);
+    }
+    for (const item of prefs.nearby) {
+      if (item.weight >= 2) {
+        list.push(`${item.label} inom ${item.minutes} min ${S.MODE_LABEL[item.mode]}`);
+      }
+    }
+    return list;
+  }
+
+  root.RP = root.RP || {};
+  root.RP.links = { booking, airbnb, checklist };
+})(window);
