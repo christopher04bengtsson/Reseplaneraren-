@@ -76,6 +76,9 @@
     budget.calls++;
     const r = await fetch(API + endpoint, {
       method: 'POST',
+      // Skicka hela sidans adress, så att nyckelns låsning till
+      // .../Reseplaneraren-/* känner igen den (annars skickas bara domänen).
+      referrerPolicy: 'no-referrer-when-downgrade',
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': getKey(),
