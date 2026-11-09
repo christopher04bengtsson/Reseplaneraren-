@@ -1,10 +1,9 @@
 /*
  * Inställningar för riktiga data.
  *
- * googleApiKey: klistra in din Google-nyckel mellan citattecknen.
- *   Nyckeln syns i koden på GitHub, men det gör inget eftersom den är
- *   låst i Google Cloud till sidans adresser och till Places API (New)
- *   och Maps JavaScript API. Lämnas den tom används testdata.
+ * googleApiKey: lämna TOM. Repot är publikt, så nyckeln ska inte ligga här.
+ *   Skriv i stället in den på resultatsidan under "Google-nyckel". Den
+ *   sparas då bara i den webbläsaren, en gång per enhet.
  *
  *   OBS: en låst nyckel fungerar inte när sidan öppnas som fil
  *   (dubbelklick). Testa via http://localhost:8000 eller GitHub Pages.

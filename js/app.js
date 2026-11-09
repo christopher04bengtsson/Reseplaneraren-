@@ -573,6 +573,20 @@
     <p class="muted">${c.rooms.total} personer · ${c.dates.nights} nätter</p>`;
   }
 
+  function keyHTML() {
+    if (RP.places.enabled()) {
+      const k = RP.places.getKey();
+      return `<p class="muted">Sparad i den här webbläsaren: <code>${esc(k.slice(0, 6))}…${esc(k.slice(-4))}</code></p>
+        <button type="button" class="btn secondary small" data-action="removeKey">Ta bort nyckeln</button>`;
+    }
+    return `<form class="add-item" data-action-form="saveKey">
+        <label class="field grow"><span class="field-label">API-nyckel</span>
+          <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="AIza…"></label>
+        <button type="submit" class="btn secondary">Spara</button>
+      </form>
+      <p class="muted">Sparas bara i den här webbläsaren, inte på GitHub. Behövs en gång per enhet.</p>`;
+  }
+
   function renderResults() {
     const wide = window.matchMedia('(min-width: 900px)').matches;
     app.innerHTML = `
@@ -587,6 +601,10 @@
             <details id="costbox" ${wide ? 'open' : ''}>
               <summary>Kostnadsdelning</summary>
               <div id="cost">${costHTML()}</div>
+            </details>
+            <details id="keybox" ${RP.places.enabled() ? '' : 'open'}>
+              <summary>Google-nyckel</summary>
+              <div id="keyInner">${keyHTML()}</div>
             </details>
           </aside>
           <div id="resultsMain"></div>
@@ -618,7 +636,7 @@
 
   function placesStatusHTML() {
     if (!RP.places.enabled()) {
-      return '<p class="test-badge">Testdata – lägg in Google-nyckeln i js/config.js för riktiga platser.</p>';
+      return '<p class="test-badge">Testdata – lägg in din Google-nyckel i panelen för riktiga platser.</p>';
     }
     if (location.protocol === 'file:') {
       return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>
@@ -736,6 +754,11 @@
         state.lodging = state.lodging.includes(k) ? state.lodging.filter((x) => x !== k) : [...state.lodging, k];
         break;
       }
+      case 'removeKey':
+        RP.places.setKey('');
+        places.data = {}; places.sig = '';
+        renderResults();
+        return;
       case 'removeItem':
         state.nearby.splice(Number(btn.dataset.i), 1);
         break;
@@ -752,6 +775,16 @@
   });
 
   app.addEventListener('submit', (e) => {
+    const keyForm = e.target.closest('[data-action-form="saveKey"]');
+    if (keyForm) {
+      e.preventDefault();
+      const v = keyForm.querySelector('#apiKey').value.trim();
+      if (!v) return;
+      RP.places.setKey(v);
+      places.sig = '';
+      renderResults();
+      return;
+    }
     const form = e.target.closest('[data-action-form="addItem"]');
     if (!form) return;
     e.preventDefault();

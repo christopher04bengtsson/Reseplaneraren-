@@ -14,7 +14,7 @@ och gå till http://localhost:8000.
 
 ## Google-nyckeln
 
-Öppna `js/config.js` och klistra in nyckeln i `googleApiKey`. Nyckeln är låst i Google Cloud till sidans adresser, så den fungerar bara via `http://localhost:8000` eller GitHub Pages, inte när man dubbelklickar på filen.
+Nyckeln ligger inte i repot. Skriv in den på resultatsidan under **Google-nyckel**, så sparas den bara i den webbläsaren (en gång per enhet). Nyckeln är låst i Google Cloud till sidans adresser, så den fungerar bara via `http://localhost:8000` eller GitHub Pages, inte när man dubbelklickar på filen.
 
 ## Filer
 
@@ -36,7 +36,7 @@ och gå till http://localhost:8000.
 - [x] 2. Frågeflödet, med sovrum och sängar
 - [x] 3. Resultatsidan med testdata, kartan som platshållare och poängberäkningen
 - [x] 4. Kostnadsdelning
-- [x] 5. Google Places: avstånd till platser i närheten, med cache och anropsgräns. Nyckeln läggs i `js/config.js`
+- [x] 5. Google Places: avstånd till platser i närheten, med cache och anropsgräns. Nyckeln skrivs in på sidan
 - [ ] 6. Ortens storlek och liv och rörelse med riktig data (gränserna för liv och rörelse i `scoring.js` är preliminära)
 - [ ] 7. Klimat från Open-Meteo
 - [ ] 8. Förslag på resmål med riktig data (logiken finns, men den går på testdata)

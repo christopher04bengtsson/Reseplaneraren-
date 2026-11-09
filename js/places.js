@@ -31,7 +31,19 @@
   const badTypes = new Set(); // typer som Google svarat 400 på, så vi inte frågar igen
 
   const cfg = () => root.RP.CONFIG || {};
-  const enabled = () => !!(cfg().googleApiKey || '').trim();
+  const KEY_STORE = 'rp-google-key';
+  // Nyckeln sparas bara i den här webbläsaren, aldrig i repot.
+  function getKey() {
+    let k = '';
+    try { k = localStorage.getItem(KEY_STORE) || ''; } catch (e) { /* privat läge */ }
+    return (k || cfg().googleApiKey || '').trim();
+  }
+  function setKey(k) {
+    try {
+      if (k) localStorage.setItem(KEY_STORE, k.trim()); else localStorage.removeItem(KEY_STORE);
+    } catch (e) { /* privat läge */ }
+  }
+  const enabled = () => !!getKey();
 
   // ---------- Cache ----------
 
@@ -66,7 +78,7 @@
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-Goog-Api-Key': cfg().googleApiKey.trim(),
+        'X-Goog-Api-Key': getKey(),
         'X-Goog-FieldMask': FIELDS
       },
       body: JSON.stringify(body)
@@ -189,5 +201,5 @@
   }
 
   root.RP = root.RP || {};
-  root.RP.places = { enabled, fetchNearby, radiusFor, distance };
+  root.RP.places = { enabled, getKey, setKey, fetchNearby, radiusFor, distance };
 })(window);
