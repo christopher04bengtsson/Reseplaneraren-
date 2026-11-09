@@ -12,6 +12,10 @@ python3 -m http.server 8000
 
 och gå till http://localhost:8000.
 
+## Google-nyckeln
+
+Öppna `js/config.js` och klistra in nyckeln i `googleApiKey`. Nyckeln är låst i Google Cloud till sidans adresser, så den fungerar bara via `http://localhost:8000` eller GitHub Pages, inte när man dubbelklickar på filen.
+
 ## Filer
 
 | Fil | Vad den gör |
@@ -19,6 +23,8 @@ och gå till http://localhost:8000.
 | `index.html` | Sidans skal: rubrikrad och platsen där allt ritas |
 | `css/style.css` | Utseendet. Färgerna ligger överst som variabler, så ett nytt tema är bara att byta dem |
 | `js/scoring.js` | Uträkningar: sovrum och sängar, datum, poäng, rankning och kostnadsdelning |
+| `js/config.js` | Google-nyckeln, gränsen för anrop per sökning och hur länge cachen sparas |
+| `js/places.js` | Hämtar närmaste strand, restaurang, padelbana osv. från Google Places, med cache och anropsgräns |
 | `js/testdata.js` | Påhittade områden och klimat för Mallorca, Katalonien, Teneriffa och Chamonix |
 | `js/links.js` | Länkar till Booking och Airbnb, plus checklistan för det som inte går att skicka med |
 | `js/app.js` | Frågeflödet i 7 steg och resultatsidan |
@@ -30,7 +36,7 @@ och gå till http://localhost:8000.
 - [x] 2. Frågeflödet, med sovrum och sängar
 - [x] 3. Resultatsidan med testdata, kartan som platshållare och poängberäkningen
 - [x] 4. Kostnadsdelning
-- [ ] 5. Google Places (kräver API-nyckel, låsning, kvoter och cache)
+- [x] 5. Google Places: avstånd till platser i närheten, med cache och anropsgräns. Nyckeln läggs i `js/config.js`
 - [ ] 6. Ortens storlek och liv och rörelse med riktig data (gränserna för liv och rörelse i `scoring.js` är preliminära)
 - [ ] 7. Klimat från Open-Meteo
 - [ ] 8. Förslag på resmål med riktig data (logiken finns, men den går på testdata)

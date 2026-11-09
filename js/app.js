@@ -505,7 +505,7 @@
         <ul>${res.excluded.map((r) => `<li><strong>${esc(r.area.name)}</strong> – saknar ${r.excludedBy.map(esc).join(', ')} inom valt avstånd</li>`).join('')}</ul>
       </details>` : '';
     return `${note}
-      <p class="test-badge">Testdata – riktiga platser och klimat kopplas in i steg 5–8.</p>
+      ${placesStatusHTML()}
       ${mapHTML(res.included)}
       ${empty}
       <div class="cards">${res.included.map((r, i) => cardHTML(r, i, ctx)).join('')}</div>
@@ -595,9 +595,76 @@
     refreshResults(false);
   }
 
-  function refreshResults(controlsToo) {
+  // ---------- Riktiga platser från Google (steg 5) ----------
+
+  const places = { data: {}, status: 'idle', calls: 0, limited: false, error: null, sig: '', run: 0 };
+
+  /** Testdatan, med avstånden från Google där vi har dem. */
+  function liveData() {
+    if (!RP.places.enabled()) return DATA;
+    return {
+      destinations: DATA.destinations,
+      areas: DATA.areas.map((a) => {
+        const real = places.data[a.id];
+        if (!real) return a;
+        const nearby = { ...a.nearby };
+        for (const [k, v] of Object.entries(real)) {
+          if (v === null) delete nearby[k]; else nearby[k] = v;
+        }
+        return { ...a, nearby, real: true };
+      })
+    };
+  }
+
+  function placesStatusHTML() {
+    if (!RP.places.enabled()) {
+      return '<p class="test-badge">Testdata – lägg in Google-nyckeln i js/config.js för riktiga platser.</p>';
+    }
+    if (location.protocol === 'file:') {
+      return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>
+        Nyckeln fungerar inte när sidan öppnas som fil. Öppna den via http://localhost:8000 eller GitHub Pages.</p>`;
+    }
+    if (places.status === 'loading') {
+      return `<p class="test-badge">Hämtar platser från Google … ${places.calls} anrop</p>`;
+    }
+    if (places.error) {
+      return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>
+        Kunde inte hämta platser från Google: ${esc(places.error)}. Avstånden är testdata.</p>`;
+    }
+    const note = places.limited
+      ? ` Gränsen på ${RP.CONFIG.maxCallsPerSearch} anrop nåddes, så vissa avstånd är testdata.` : '';
+    return `<p class="test-badge">Avstånd från Google Places · ${places.calls} nya anrop, resten från cache.${note}
+      Ort och klimat är fortfarande testdata.</p>`;
+  }
+
+  /** Hämtar avstånd för de områden som visas, om något ändrats sedan sist. */
+  async function ensurePlaces(res) {
+    if (!RP.places.enabled() || location.protocol === 'file:') return;
+    const areas = [...res.included, ...res.excluded].map((r) => r.area);
+    const items = state.nearby.filter((n) => n.weight > 0);
+    const sig = JSON.stringify([areas.map((a) => a.id), items.map((n) => [n.label, n.mode, n.minutes])]);
+    if (sig === places.sig) return;
+    places.sig = sig;
+    const run = ++places.run;
+    places.status = 'loading'; places.calls = 0; places.error = null; places.limited = false;
+    const out = await RP.places.fetchNearby(areas, items, (calls) => {
+      if (run !== places.run) return;
+      places.calls = calls;
+      const badge = document.querySelector('#resultsMain .test-badge');
+      if (badge) badge.textContent = `Hämtar platser från Google … ${calls} anrop`;
+    });
+    if (run !== places.run) return; // en nyare hämtning har startat
+    for (const [id, v] of Object.entries(out.data)) places.data[id] = { ...places.data[id], ...v };
+    places.status = 'done'; places.calls = out.calls; places.limited = out.limited;
+    places.error = out.error ? out.error.message : null;
+    if (out.error) places.sig = ''; // försök igen nästa gång
+    if (state.view === 'results' && document.getElementById('resultsMain')) refreshResults(false, true);
+  }
+
+  function refreshResults(controlsToo, fromPlaces) {
     const ctx = context();
-    const res = S.rankAreas(DATA, state, ctx);
+    const res = S.rankAreas(liveData(), state, ctx);
+    if (!fromPlaces) ensurePlaces(res); // sätter status "Hämtar" innan sidan ritas
     if (controlsToo) {
       document.getElementById('controls').innerHTML = controlsHTML();
       document.getElementById('cost').innerHTML = costHTML();
