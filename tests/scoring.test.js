@@ -106,7 +106,7 @@ test('Chamonix är ett resmål i Alperna men inte ett regionval', () => {
 const basePrefs = {
   group: { total: 10, couples: 3, children: 0, ownRoom: 0 },
   dest: { known: 'no', place: '', continent: 'Europa', region: 'Alperna' },
-  climate: { temp: [1, 2], tempWeight: 2, avoidRain: false, rainMax: 1 },
+  climate: { temp: [1, 2], tempWeight: 2 },
   lodging: ['house'],
   town: { size: [0, 2], sizeWeight: 1, life: [1, 3], lifeWeight: 1 },
   nearby: [{ key: 'beach', label: 'Strand', weight: 2, mode: 'walk', minutes: 10 }],

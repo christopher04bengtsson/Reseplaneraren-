@@ -45,7 +45,7 @@
       group: { total: 10, couples: 3, children: 0, ownRoom: 0 },
       dest: { known: 'no', place: '', continent: 'Europa', region: 'alla' },
       dates: defaultDates(),
-      climate: { temp: [1, 2], tempWeight: 2, avoidRain: false, rainMax: 1 },
+      climate: { temp: [1, 2], tempWeight: 2 },
       lodging: ['house'],
       amenities: [],
       town: { size: [0, 2], sizeWeight: 1, life: [1, 3], lifeWeight: 1 },
@@ -143,14 +143,6 @@
         Tryck på ett steg för att utöka eller minska spannet.</p>`}`;
   }
 
-  function toggle(path, label) {
-    return `<label class="switch">
-      <input type="checkbox" data-bind="${path}" data-rerender ${get(path) ? 'checked' : ''}>
-      <span class="track" aria-hidden="true"></span>
-      <span>${label}</span>
-    </label>`;
-  }
-
   function amenityChips(group) {
     return `<div class="chips">${S.AMENITIES.filter((a) => a.group === group).map((a) => {
       const on = state.amenities.includes(a.key);
@@ -178,10 +170,6 @@
         return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>Hemresan måste vara efter avresan.</p>`;
       }
       return `<p class="muted">${d.nights} nätter${state.dates.flex === 'pm3' ? ', ± 3 dagar' : ''}</p>`;
-    },
-    rain() {
-      const v = state.climate.rainMax;
-      return `Högst <strong>${String(v).replace('.', ',')} ${v === 1 ? 'regndag' : 'regndagar'}</strong> per vecka`;
     },
     budget() {
       const c = context();
@@ -306,14 +294,7 @@
     () => `
       <p class="field-label">Temperatur dagtid</p>
       ${spanPicker('climate.temp', S.TEMP_STEPS, 'Temperatur dagtid')}
-      <div class="toggle-block">
-        ${toggle('climate.avoidRain', 'Undvik regn')}
-        ${state.climate.avoidRain ? `
-          <label class="range">
-            <span data-live="rain">${live.rain()}</span>
-            <input type="range" min="0" max="4" step="0.5" data-bind="climate.rainMax" value="${state.climate.rainMax}">
-          </label>` : ''}
-      </div>`,
+      <p class="hint">Jämförs med normal temperatur dagtid för era datum (medel 2019–2024).</p>`,
 
     // 4. Typ av boende
     () => `
@@ -691,11 +672,6 @@
         <div class="ctrl-head"><span class="field-label">Temperatur</span></div>
         ${spanPicker('climate.temp', S.TEMP_STEPS, 'Temperatur dagtid', true)}
         ${weightPicker('climate.tempWeight', 'temperatur')}
-      </div>
-      <div class="ctrl">
-        ${toggle('climate.avoidRain', 'Undvik regn')}
-        ${state.climate.avoidRain ? `<label class="range"><span data-live="rain">${live.rain()}</span>
-          <input type="range" min="0" max="4" step="0.5" data-bind="climate.rainMax" value="${state.climate.rainMax}"></label>` : ''}
       </div>
       <div class="ctrl">
         <div class="ctrl-head"><span class="field-label">Ortens storlek</span></div>

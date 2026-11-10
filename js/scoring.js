@@ -248,17 +248,6 @@
         text: `Ca ${Math.round(climate.tMax)} °C dagtid`
       });
     }
-    if (t.avoidRain) {
-      if (climate.rain === null) {
-        out.push(unknown('rain', 'Regn', 'Regndata saknas'));
-      } else {
-        out.push({
-          id: 'rain', label: 'Regn', weight: 2,
-          score: rangeScore(climate.rain, 0, t.rainMax, Math.max(1, t.rainMax)),
-          text: `${climate.rain.toFixed(1).replace('.', ',')} regndagar/vecka`
-        });
-      }
-    }
     return out;
   }
 
