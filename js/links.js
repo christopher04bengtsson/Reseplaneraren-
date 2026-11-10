@@ -35,6 +35,11 @@
     p.set('selected_currency', 'SEK');
     const nflt = ctx.lodging.map((k) => `ht_id=${BOOKING_HT[k]}`);
     for (const a of chosen(ctx)) if (a.booking) nflt.push(a.booking);
+    if (ctx.budgetPPN > 0) {
+      // Bookings budgetfilter: pris per natt för hela bokningen, i SEK.
+      // Formatet är price=VALUTA-min-max-1 (1 = per natt).
+      nflt.push(`price=SEK-0-${Math.round(ctx.budgetPPN * ctx.rooms.total)}-1`);
+    }
     if (!onlyHotel) nflt.push(`entire_place_bedroom_count=${ctx.rooms.bedrooms}`);
     if (nflt.length) p.set('nflt', nflt.join(';'));
     return 'https://www.booking.com/searchresults.sv.html?' + p.toString();
@@ -120,7 +125,7 @@
     const noAirbnb = chosen(ctx).filter((a) => !a.airbnb && !a.airbnbParam);
     if (noAirbnb.length) list.push(`Airbnb: håll utkik efter ${noAirbnb.map((a) => a.label.toLowerCase()).join(', ')}`);
     if (ctx.budgetPPN > 0) {
-      list.push(`Budget ca ${S.formatKr(ctx.budgetPPN)} per person och natt (Booking: ställ in pris själv)`);
+      list.push(`Budget ca ${S.formatKr(ctx.budgetPPN)} per person och natt (${S.formatKr(ctx.budgetPPN * ctx.rooms.total)} per natt för hela gruppen)`);
     }
     for (const item of prefs.nearby) {
       if (item.weight >= 2) {
