@@ -358,3 +358,9 @@ input:focus, select:focus { border-color: var(--brand); outline: none; }
   .range { margin-left: 0; }
   .actions { grid-template-columns: 1fr; }
 }
+
+/* Saknad data: räknas inte in i poängen */
+.facts li.unknown { background: var(--surface-2); color: var(--muted); }
+.facts li.unknown .sym { background: var(--line); color: var(--text); }
+.area-card .country { margin: 2px 0 0; font-size: .95rem; }
+.area-card .country strong { color: var(--brand); }

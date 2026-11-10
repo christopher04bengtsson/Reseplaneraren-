@@ -8,7 +8,9 @@
 
   const S = RP.scoring;
   const L = RP.links;
-  const DATA = RP.TESTDATA;
+  const RES = RP.RESMAL;      // data/resmal.js, byggd av tools/bygg-resmal.mjs
+  const ALL = RES.resmal;
+  const SHORTLIST = 12;       // så många resmål kontrolleras mot Google
   const STORE = 'rp-state-v1';
   const app = document.getElementById('app');
 
@@ -37,13 +39,13 @@
 
   function defaultState() {
     return {
-      version: 1,
+      version: 2,
       view: 'flow',
       step: 0,
       group: { total: 10, couples: 3, children: 0, ownRoom: 0 },
-      dest: { known: 'yes', place: 'Mallorca', continent: 'Europa', region: 'Medelhavet' },
+      dest: { known: 'no', place: '', continent: 'Europa', region: 'alla' },
       dates: defaultDates(),
-      climate: { temp: [1, 2], tempWeight: 2, swim: false, seaMin: 21, avoidRain: false, rainMax: 1 },
+      climate: { temp: [1, 2], tempWeight: 2, avoidRain: false, rainMax: 1 },
       lodging: ['house'],
       town: { size: [0, 2], sizeWeight: 1, life: [1, 3], lifeWeight: 1 },
       nearby: S.NEARBY_DEFAULTS.map((n) => ({
@@ -60,7 +62,7 @@
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(STORE));
-      if (s && s.version === 1) return s;
+      if (s && s.version === 2) return s;
     } catch (e) { /* ingen sparad data */ }
     return null;
   }
@@ -168,7 +170,6 @@
       }
       return `<p class="muted">${d.nights} nätter${state.dates.flex === 'pm3' ? ', ± 3 dagar' : ''}</p>`;
     },
-    sea() { return `Lägst <strong>${state.climate.seaMin} °C</strong> i havet`; },
     rain() {
       const v = state.climate.rainMax;
       return `Högst <strong>${String(v).replace('.', ',')} ${v === 1 ? 'regndag' : 'regndagar'}</strong> per vecka`;
@@ -246,19 +247,19 @@
     // 2. Resmål och datum
     () => {
       const d = state.dest;
-      const names = [...DATA.destinations.map((x) => x.name), ...DATA.areas.map((a) => a.name.split(' – ')[0])];
-      const regions = RP.CONTINENTS[d.continent] || [];
+      const names = [...new Set([...ALL.map((x) => x.namn), ...ALL.map((x) => x.land)])].sort((a, b) => a.localeCompare(b, 'sv'));
+      const regions = (RES.regioner[d.continent] || []).map((r) => r.namn);
       const where = d.known === 'yes'
         ? `<label class="field">
             <span class="field-label">Ort, ö eller region</span>
             <input type="text" data-bind="dest.place" value="${esc(d.place)}" list="placeList"
-              placeholder="T.ex. Mallorca" autocomplete="off">
+              placeholder="T.ex. Nice eller Kroatien" autocomplete="off">
             <datalist id="placeList">${names.map((n) => `<option value="${esc(n)}">`).join('')}</datalist>
           </label>`
         : `<label class="field">
             <span class="field-label">Världsdel</span>
             <select data-bind="dest.continent" data-rerender>
-              ${Object.keys(RP.CONTINENTS).map((c) => `<option ${c === d.continent ? 'selected' : ''}>${c}</option>`).join('')}
+              ${Object.keys(RES.regioner).map((c) => `<option ${c === d.continent ? 'selected' : ''}>${c}</option>`).join('')}
             </select>
           </label>
           <label class="field">
@@ -296,14 +297,6 @@
     () => `
       <p class="field-label">Temperatur dagtid</p>
       ${spanPicker('climate.temp', S.TEMP_STEPS, 'Temperatur dagtid')}
-      <div class="toggle-block">
-        ${toggle('climate.swim', 'Vi vill bada')}
-        ${state.climate.swim ? `
-          <label class="range">
-            <span data-live="sea">${live.sea()}</span>
-            <input type="range" min="16" max="28" step="1" data-bind="climate.seaMin" value="${state.climate.seaMin}">
-          </label>` : ''}
-      </div>
       <div class="toggle-block">
         ${toggle('climate.avoidRain', 'Undvik regn')}
         ${state.climate.avoidRain ? `
@@ -404,19 +397,16 @@
     const top = res.included[0];
     const where = state.dest.known === 'yes'
       ? esc(state.dest.place)
-      : (top ? `Föreslaget: ${esc(top.dest.name)}` : 'Inget förslag');
+      : (top ? `Föreslaget: ${esc(top.dest.namn)}, ${esc(top.dest.land)}` : 'Inget förslag');
     const parts = [where, dateSummary(ctx.dates), `${ctx.rooms.total} personer`, `minst ${ctx.rooms.bedrooms} sovrum`];
     return `<p class="summary-line">${parts.filter(Boolean).map((p) => `<span>${p}</span>`).join('<span aria-hidden="true"> · </span>')}</p>
       <button type="button" class="btn secondary small" data-action="edit">Ändra svar</button>`;
   }
 
-  function mapHTML(all) {
-    // Kartan visar resmålet som ligger överst, så att nålarna inte hamnar
-    // hundratals mil isär. Numren följer listan.
-    if (!all.length) return '';
-    const list = all.map((r, n) => ({ ...r, n })).filter((r) => r.dest.id === all[0].dest.id);
+  function mapHTML(list) {
+    if (!list.length) return '';
     const W = 400, H = 240, pad = 34;
-    const lats = list.map((r) => r.area.lat), lngs = list.map((r) => r.area.lng);
+    const lats = list.map((r) => r.dest.lat), lngs = list.map((r) => r.dest.lng);
     const midLat = (Math.min(...lats) + Math.max(...lats)) / 2;
     const k = Math.cos((midLat * Math.PI) / 180);
     const xs = lngs.map((l) => l * k);
@@ -429,56 +419,67 @@
       const y = offY + (maxY - lats[i]) * scale;
       const anchor = x > W - 120 ? 'end' : 'start';
       const tx = anchor === 'end' ? x - 17 : x + 17;
-      return `<a href="#area-${r.area.id}" class="pin" aria-label="${r.n + 1}. ${esc(r.area.name)}">
+      return `<a href="#area-${r.dest.id}" class="pin" aria-label="${i + 1}. ${esc(r.dest.namn)}, ${esc(r.dest.land)}">
         <circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="13"></circle>
-        <text x="${x.toFixed(1)}" y="${(y + 4.5).toFixed(1)}" text-anchor="middle" class="pin-n">${r.n + 1}</text>
-        <text x="${tx.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="${anchor}" class="pin-l">${esc(r.area.name.split(' – ')[0])}</text>
+        <text x="${x.toFixed(1)}" y="${(y + 4.5).toFixed(1)}" text-anchor="middle" class="pin-n">${i + 1}</text>
+        <text x="${tx.toFixed(1)}" y="${(y + 4).toFixed(1)}" text-anchor="${anchor}" class="pin-l">${esc(r.dest.namn)}</text>
       </a>`;
     }).join('');
     return `<figure class="map">
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Karta över områdena">
+      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Karta över resmålen">
         <rect x="0" y="0" width="${W}" height="${H}" rx="14" class="map-bg"></rect>
         ${pins}
       </svg>
-      <figcaption class="muted">${esc(all[0].dest.name)} · platshållare – Google-kartan kopplas in i steg 10.</figcaption>
+      <figcaption class="muted">Platshållare – Google-kartan kopplas in i steg 10.</figcaption>
     </figure>`;
   }
 
   function factHTML(c) {
+    if (c.unknown) {
+      return `<li class="unknown"><span class="sym" aria-hidden="true">?</span>
+        <span>${esc(c.text)}<span class="sr-only"> – räknas inte in</span></span></li>`;
+    }
     const ok = c.score >= 1;
-    const cls = ok ? 'ok' : 'miss';
-    const sym = ok ? '✓' : '!';
-    return `<li class="${cls}"><span class="sym" aria-hidden="true">${sym}</span>
+    return `<li class="${ok ? 'ok' : 'miss'}"><span class="sym" aria-hidden="true">${ok ? '✓' : '!'}</span>
       <span>${esc(c.text)}<span class="sr-only">${ok ? ' – stämmer' : ' – stämmer inte helt'}</span></span></li>`;
   }
 
+  const TYP_LABEL = { strand: 'Strand', stad: 'Stad', berg: 'Berg', 'sjö': 'Sjö' };
+
+  /** Det länkarna behöver: ort och land. */
+  const linkArea = (d) => ({ name: d.namn });
+  const linkDest = (d) => ({ name: d.land, country: d.land });
+
   function cardHTML(r, i, ctx) {
-    const facts = r.criteria.filter((c) => c.weight > 0).sort((a, b) => b.weight - a.weight);
-    const clim = [`Ca ${Math.round(r.climate.tMax)} °C`];
-    if (r.climate.sea != null) clim.push(`havet ${Math.round(r.climate.sea)} °C`);
-    const checklist = L.checklist(r.area, r.dest, ctx, state);
-    const sumW = facts.reduce((s, c) => s + c.weight, 0);
+    const d = r.dest;
+    const facts = r.criteria.filter((c) => c.weight > 0 || c.unknown)
+      .sort((a, b) => (a.unknown - b.unknown) || (b.weight - a.weight));
+    const counted = facts.filter((c) => !c.unknown);
+    const clim = [];
+    if (r.climate.tMax !== null) clim.push(`Ca ${Math.round(r.climate.tMax)} °C`);
+    const checklist = L.checklist(linkArea(d), linkDest(d), ctx, state);
+    const sumW = counted.reduce((s, c) => s + c.weight, 0);
     return `
-      <article class="area-card" id="area-${r.area.id}">
+      <article class="area-card" id="area-${d.id}">
         <header>
           <span class="pin-num" aria-hidden="true">${i + 1}</span>
           <div class="grow">
-            <h2>${esc(r.area.name)}</h2>
-            <p class="muted">${esc(r.dest.name)}, ${esc(r.dest.country)}</p>
+            <h2>${esc(d.namn)}</h2>
+            <p class="country"><span aria-hidden="true">📍</span> <strong>${esc(d.land)}</strong>${d.omrade ? ` · ${esc(d.omrade)}` : ''}</p>
           </div>
           <div class="match" style="--p:${r.percent}">
             <strong>${r.percent}%</strong><small>matchning</small>
           </div>
         </header>
         <ul class="tags">
-          <li>${S.SIZE_STEPS[r.sizeStep].label}</li>
-          <li>${S.LIFE_STEPS[r.lifeStep].label}</li>
-          <li>${clim.join(' · ')}</li>
+          <li>${TYP_LABEL[d.typ] || d.typ}</li>
+          ${r.sizeStep !== null ? `<li>${S.SIZE_STEPS[r.sizeStep].label}</li>` : ''}
+          ${clim.length ? `<li>${clim.join(' · ')}</li>` : ''}
         </ul>
         <ul class="facts">${facts.map(factHTML).join('')}</ul>
         <div class="actions">
-          <a class="btn booking" href="${L.booking(r.area, r.dest, ctx)}" target="_blank" rel="noopener">Sök på Booking</a>
-          <a class="btn airbnb" href="${L.airbnb(r.area, r.dest, ctx)}" target="_blank" rel="noopener">Sök på Airbnb</a>
+          <a class="btn booking" href="${L.booking(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Sök på Booking</a>
+          <a class="btn airbnb" href="${L.airbnb(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Sök på Airbnb</a>
         </div>
         ${checklist.length ? `<details class="checklist">
           <summary>Att bocka av på sajten (${checklist.length})</summary>
@@ -488,28 +489,35 @@
           <summary>Så räknades poängen</summary>
           <table>
             <thead><tr><th>Kriterium</th><th>Vikt</th><th>Delvärde</th></tr></thead>
-            <tbody>${facts.map((c) => `<tr><td>${esc(c.label)}</td><td>${c.weight}</td><td>${c.score.toFixed(2).replace('.', ',')}</td></tr>`).join('')}</tbody>
+            <tbody>${counted.map((c) => `<tr><td>${esc(c.label)}</td><td>${c.weight}</td><td>${c.score.toFixed(2).replace('.', ',')}</td></tr>`).join('')}</tbody>
           </table>
-          <p class="muted">Summan av vikt × delvärde delat med summan av vikterna (${sumW}).</p>
+          <p class="muted">Summan av vikt × delvärde delat med summan av vikterna (${sumW}). Rader med ? saknar data och räknas inte.</p>
+          <p class="muted">Källor: invånare från <a href="https://www.wikidata.org/wiki/${esc(d.wikidata)}" target="_blank" rel="noopener">Wikidata</a>${d.invanareAr ? ` (${d.invanareAr})` : ''}, klimat från Open-Meteo.</p>
         </details>
       </article>`;
   }
 
   function mainHTML(res, ctx) {
     const note = res.note ? `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>${esc(res.note)}</p>` : '';
-    const empty = !res.included.length
-      ? `<p class="callout">Inga områden klarade alla krav. Sänk något "Måste finnas" i panelen.</p>` : '';
+    const empty = !res.included.length && !res.note
+      ? `<p class="callout">Inga resmål klarade alla krav. Sänk något "Måste finnas" i panelen.</p>` : '';
     const excluded = res.excluded.length ? `
       <details class="excluded">
-        <summary>${res.excluded.length} områden sorterades bort</summary>
-        <ul>${res.excluded.map((r) => `<li><strong>${esc(r.area.name)}</strong> – saknar ${r.excludedBy.map(esc).join(', ')} inom valt avstånd</li>`).join('')}</ul>
+        <summary>${res.excluded.length} resmål sorterades bort</summary>
+        <ul>${res.excluded.map((r) => `<li><strong>${esc(r.dest.namn)}, ${esc(r.dest.land)}</strong> – saknar ${r.excludedBy.map(esc).join(', ')} inom valt avstånd</li>`).join('')}</ul>
+      </details>` : '';
+    const rest = res.rest.length ? `
+      <details class="excluded">
+        <summary>${res.rest.length} resmål till med lägre matchning på klimat och storlek</summary>
+        <ul>${res.rest.map((r) => `<li><strong>${esc(r.dest.namn)}, ${esc(r.dest.land)}</strong> – ${r.percent} %</li>`).join('')}</ul>
       </details>` : '';
     return `${note}
       ${placesStatusHTML()}
       ${mapHTML(res.included)}
       ${empty}
       <div class="cards">${res.included.map((r, i) => cardHTML(r, i, ctx)).join('')}</div>
-      ${excluded}`;
+      ${excluded}
+      ${rest}`;
   }
 
   function controlsHTML() {
@@ -520,9 +528,6 @@
         ${weightPicker('climate.tempWeight', 'temperatur')}
       </div>
       <div class="ctrl">
-        ${toggle('climate.swim', 'Vi vill bada')}
-        ${state.climate.swim ? `<label class="range"><span data-live="sea">${live.sea()}</span>
-          <input type="range" min="16" max="28" step="1" data-bind="climate.seaMin" value="${state.climate.seaMin}"></label>` : ''}
         ${toggle('climate.avoidRain', 'Undvik regn')}
         ${state.climate.avoidRain ? `<label class="range"><span data-live="rain">${live.rain()}</span>
           <input type="range" min="0" max="4" step="0.5" data-bind="climate.rainMax" value="${state.climate.rainMax}"></label>` : ''}
@@ -617,26 +622,9 @@
 
   const places = { data: {}, status: 'idle', calls: 0, limited: false, error: null, sig: '', run: 0 };
 
-  /** Testdatan, med avstånden från Google där vi har dem. */
-  function liveData() {
-    if (!RP.places.enabled()) return DATA;
-    return {
-      destinations: DATA.destinations,
-      areas: DATA.areas.map((a) => {
-        const real = places.data[a.id];
-        if (!real) return a;
-        const nearby = { ...a.nearby };
-        for (const [k, v] of Object.entries(real)) {
-          if (v === null) delete nearby[k]; else nearby[k] = v;
-        }
-        return { ...a, nearby, real: true };
-      })
-    };
-  }
-
   function placesStatusHTML() {
     if (!RP.places.enabled()) {
-      return '<p class="test-badge">Testdata – lägg in din Google-nyckel i panelen för riktiga platser.</p>';
+      return '<p class="test-badge">Avstånd till strand, restauranger m.m. hämtas från Google när du lagt in din nyckel i panelen.</p>';
     }
     if (location.protocol === 'file:') {
       return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>
@@ -647,18 +635,18 @@
     }
     if (places.error) {
       return `<p class="callout warn"><span class="sym" aria-hidden="true">!</span>
-        Kunde inte hämta platser från Google: ${esc(places.error)}. Avstånden är testdata.</p>`;
+        Kunde inte hämta platser från Google: ${esc(places.error)}. Avstånden räknas inte in.</p>`;
     }
     const note = places.limited
-      ? ` Gränsen på ${RP.CONFIG.maxCallsPerSearch} anrop nåddes, så vissa avstånd är testdata.` : '';
+      ? ` Gränsen på ${RP.CONFIG.maxCallsPerSearch} anrop nåddes, så vissa avstånd saknas.` : '';
     return `<p class="test-badge">Avstånd från Google Places · ${places.calls} nya anrop, resten från cache.${note}
-      Ort och klimat är fortfarande testdata.</p>`;
+</p>`;
   }
 
   /** Hämtar avstånd för de områden som visas, om något ändrats sedan sist. */
   async function ensurePlaces(res) {
     if (!RP.places.enabled() || location.protocol === 'file:') return;
-    const areas = [...res.included, ...res.excluded].map((r) => r.area);
+    const areas = res.shortlist;
     const items = state.nearby.filter((n) => n.weight > 0);
     const sig = JSON.stringify([areas.map((a) => a.id), items.map((n) => [n.label, n.mode, n.minutes])]);
     if (sig === places.sig) return;
@@ -681,7 +669,7 @@
 
   function refreshResults(controlsToo, fromPlaces) {
     const ctx = context();
-    const res = S.rankAreas(liveData(), state, ctx);
+    const res = S.rankDestinations(ALL, state, ctx, RP.places.enabled() ? places.data : null, SHORTLIST);
     if (!fromPlaces) ensurePlaces(res); // sätter status "Hämtar" innan sidan ritas
     if (controlsToo) {
       document.getElementById('controls').innerHTML = controlsHTML();
@@ -734,7 +722,7 @@
       case 'set': {
         const v = btn.dataset.num !== undefined ? Number(btn.dataset.value) : btn.dataset.value;
         set(path, v);
-        if (path === 'dest.known' && v === 'no' && !RP.CONTINENTS[state.dest.continent]) state.dest.continent = 'Europa';
+        if (path === 'dest.known' && v === 'no' && !RES.regioner[state.dest.continent]) state.dest.continent = 'Europa';
         break;
       }
       case 'span': {

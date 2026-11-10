@@ -25,12 +25,25 @@ Nyckeln ligger inte i repot. Skriv in den på resultatsidan under **Google-nycke
 | `js/scoring.js` | Uträkningar: sovrum och sängar, datum, poäng, rankning och kostnadsdelning |
 | `js/config.js` | Google-nyckeln, gränsen för anrop per sökning och hur länge cachen sparas |
 | `js/places.js` | Hämtar närmaste strand, restaurang, padelbana osv. från Google Places, med cache och anropsgräns |
-| `js/testdata.js` | Påhittade områden och klimat för Mallorca, Katalonien, Teneriffa och Chamonix |
+| `data/resmal.json` | 101 resmål i 7 regioner, med koordinater och invånare från Wikidata och klimat från Open-Meteo (2019–2024). `data/resmal.js` är samma data för sidan |
+| `tools/resmal-lista.json` | Listan som bygget utgår från: namn, land, region och typ |
+| `tools/bygg-resmal.mjs` | Bygger `data/resmal.json`: `NODE_USE_ENV_PROXY=1 node tools/bygg-resmal.mjs` |
 | `js/links.js` | Länkar till Booking och Airbnb, plus checklistan för det som inte går att skicka med |
 | `js/app.js` | Frågeflödet i 7 steg och resultatsidan |
 | `tests/scoring.test.js` | Tester för uträkningarna: `node tests/scoring.test.js` |
 
-## Läget i byggordningen
+## Läget i SPEC-v2
+
+- [x] 1. Regionerna och `data/resmal.json`
+- [ ] 2. Spanien-felet och spridningsregeln
+- [ ] 3. Hus och villor från Google Places
+- [ ] 4. Smartare länkar
+- [ ] 5. LiteAPI
+- [ ] 6. Kostnadsdelningen per boende
+
+Havstemperaturen är borttagen (beslut 10 nov 2026). Strand i närheten täcker bad.
+
+## Läget i första specens byggordning
 
 - [x] 1. Grund
 - [x] 2. Frågeflödet, med sovrum och sängar

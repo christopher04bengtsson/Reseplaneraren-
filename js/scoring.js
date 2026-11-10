@@ -192,52 +192,66 @@
 
   // ---------- Klimat ----------
 
-  function climateFor(dest, area, months) {
-    const c = dest.climate;
+  /** Medel över resans månader. null om data saknas för någon månad. */
+  function avgMonths(arr, months) {
+    if (!arr) return null;
     const ms = months.length ? months : [5];
-    const avg = (arr) => ms.reduce((s, m) => s + arr[m], 0) / ms.length;
-    return {
-      tMax: avg(c.tMax) + (area ? area.tempOffset || 0 : 0),
-      sea: c.sea ? avg(c.sea) : null,
-      rain: avg(c.rain)
-    };
+    let sum = 0;
+    for (const m of ms) {
+      if (arr[m] === null || arr[m] === undefined) return null;
+      sum += arr[m];
+    }
+    return sum / ms.length;
   }
 
-  function climateCriteria(climate, prefs) {
+  function climateFor(dest, months) {
+    const c = dest.klimat || {};
+    return { tMax: avgMonths(c.tMax, months), rain: avgMonths(c.rain, months) };
+  }
+
+  function unknown(id, label, text) {
+    return { id, label, weight: 0, score: 0, unknown: true, text };
+  }
+
+  function climateCriteria(climate, prefs, dest) {
     const out = [];
     const t = prefs.climate;
-    const lo = TEMP_BOUNDS[t.temp[0]], hi = TEMP_BOUNDS[t.temp[1] + 1];
-    const tempScore = rangeScore(climate.tMax, lo, hi, TEMP_FALLOFF);
-    out.push({
-      id: 'temp', label: 'Temperatur', weight: t.tempWeight, score: tempScore,
-      text: `Ca ${Math.round(climate.tMax)} °C dagtid`
-    });
-    if (t.swim) {
-      const s = climate.sea == null ? 0 : rangeScore(climate.sea, t.seaMin, Infinity, 3);
+    if (climate.tMax === null) {
+      out.push(unknown('temp', 'Temperatur', 'Temperatur saknas'));
+    } else {
+      const lo = TEMP_BOUNDS[t.temp[0]], hi = TEMP_BOUNDS[t.temp[1] + 1];
       out.push({
-        id: 'sea', label: 'Bad', weight: 2, score: s,
-        text: climate.sea == null ? 'Inget hav' : `Havet ca ${Math.round(climate.sea)} °C`
+        id: 'temp', label: 'Temperatur', weight: t.tempWeight,
+        score: rangeScore(climate.tMax, lo, hi, TEMP_FALLOFF),
+        text: `Ca ${Math.round(climate.tMax)} °C dagtid`
       });
     }
     if (t.avoidRain) {
-      const s = rangeScore(climate.rain, 0, t.rainMax, Math.max(1, t.rainMax));
-      out.push({
-        id: 'rain', label: 'Regn', weight: 2, score: s,
-        text: `${climate.rain.toFixed(1).replace('.', ',')} regndagar/vecka`
-      });
+      if (climate.rain === null) {
+        out.push(unknown('rain', 'Regn', 'Regndata saknas'));
+      } else {
+        out.push({
+          id: 'rain', label: 'Regn', weight: 2,
+          score: rangeScore(climate.rain, 0, t.rainMax, Math.max(1, t.rainMax)),
+          text: `${climate.rain.toFixed(1).replace('.', ',')} regndagar/vecka`
+        });
+      }
     }
     return out;
   }
 
   function weightedPercent(criteria) {
     let sw = 0, sum = 0;
-    for (const c of criteria) { sw += c.weight; sum += c.weight * c.score; }
+    for (const c of criteria) {
+      if (c.unknown) continue;
+      sw += c.weight; sum += c.weight * c.score;
+    }
     return sw ? Math.round((sum / sw) * 100) : 100;
   }
 
   // ---------- Närhet ----------
 
-  /** Nyckeln i testdatan för en sak i närheten, även för egna saker. */
+  /** Nyckeln för en sak i närheten, även för egna saker. */
   function nearbyKey(item) {
     if (!item.custom) return item.key;
     const l = item.label.toLowerCase();
@@ -256,67 +270,56 @@
     return `${min} min ${MODE_LABEL[mode]}`;
   }
 
-  // ---------- Poäng per område ----------
+  // ---------- Poäng per resmål ----------
 
-  function scoreArea(area, dest, prefs, ctx) {
+  /**
+   * dest: ett resmål från data/resmal.json.
+   * nearby: { nyckel: meter | null } från Google, eller undefined om det inte hämtats.
+   * Det som saknas räknas inte in i poängen, men visas på kortet.
+   */
+  function scoreDestination(dest, nearby, prefs, ctx) {
     const criteria = [];
     const excludedBy = [];
 
-    // 1. Närhet, inklusive "Måste finnas"
     for (const item of prefs.nearby) {
       if (!item.weight) continue;
-      const dist = area.nearby[nearbyKey(item)];
+      const key = nearbyKey(item);
+      if (!nearby || !(key in nearby)) {
+        criteria.push(unknown('near:' + item.key, item.label, `${item.label}: avstånd inte hämtat`));
+        continue;
+      }
+      const dist = nearby[key];
       const limit = item.minutes * SPEED[item.mode];
-      const score = distanceScore(dist, limit);
       const must = item.weight === 3;
-      if (must && (dist == null || dist > limit)) excludedBy.push(item.label);
+      if (must && (dist === null || dist > limit)) excludedBy.push(item.label);
       criteria.push({
-        id: 'near:' + item.key, label: item.label, weight: item.weight, score, must,
-        text: dist == null ? `${item.label} saknas i närheten` : `${item.label} ${formatMinutes(dist, item.mode)}`
+        id: 'near:' + item.key, label: item.label, weight: item.weight, must,
+        score: distanceScore(dist, limit),
+        text: dist === null ? `${item.label} saknas i närheten` : `${item.label} ${formatMinutes(dist, item.mode)}`
       });
     }
 
-    // Klimat
-    const climate = climateFor(dest, area, ctx.months);
-    criteria.push(...climateCriteria(climate, prefs));
+    const climate = climateFor(dest, ctx.months);
+    criteria.push(...climateCriteria(climate, prefs, dest));
 
-    // Ortens storlek
-    const sizePos = stepPosition(area.population, SIZE_BOUNDS, true);
-    const sizeStep = Math.min(SIZE_STEPS.length - 1, Math.floor(sizePos));
-    criteria.push({
-      id: 'size', label: 'Ortens storlek', weight: prefs.town.sizeWeight,
-      score: spanScore(sizePos, prefs.town.size), text: SIZE_STEPS[sizeStep].label
-    });
-
-    // Liv och rörelse
-    const lifePos = stepPosition(area.venues1km, LIFE_BOUNDS, false);
-    const lifeStep = Math.min(LIFE_STEPS.length - 1, Math.floor(lifePos));
-    criteria.push({
-      id: 'life', label: 'Liv och rörelse', weight: prefs.town.lifeWeight,
-      score: spanScore(lifePos, prefs.town.life), text: LIFE_STEPS[lifeStep].label
-    });
-
-    // Typ av boende
-    if (prefs.lodging.length) {
-      const found = LODGING.filter((l) => prefs.lodging.includes(l.key) && area.lodging[l.key]);
+    let sizeStep = null;
+    if (dest.invanare) {
+      const sizePos = stepPosition(dest.invanare, SIZE_BOUNDS, true);
+      sizeStep = Math.min(SIZE_STEPS.length - 1, Math.floor(sizePos));
       criteria.push({
-        id: 'lodging', label: 'Boende', weight: 2, score: found.length ? 1 : 0,
-        text: found.length ? found.map((l) => l.label).join(', ') + ' finns'
-          : 'Valt boende finns inte här'
+        id: 'size', label: 'Ortens storlek', weight: prefs.town.sizeWeight,
+        score: spanScore(sizePos, prefs.town.size),
+        text: `${SIZE_STEPS[sizeStep].label} (${formatInt(dest.invanare)} inv.)`
       });
+    } else {
+      criteria.push(unknown('size', 'Ortens storlek', 'Invånarantal saknas'));
     }
 
-    // Budget
-    if (ctx.budgetPPN > 0 && prefs.budget.weight) {
-      criteria.push({
-        id: 'budget', label: 'Budget', weight: prefs.budget.weight,
-        score: rangeScore(area.pricePPN, 0, ctx.budgetPPN, ctx.budgetPPN),
-        text: `Ca ${formatKr(area.pricePPN)}/pers/natt`
-      });
-    }
+    if (prefs.town.lifeWeight) criteria.push(unknown('life', 'Liv och rörelse', 'Liv och rörelse: kommer senare'));
+    if (ctx.budgetPPN > 0 && prefs.budget.weight) criteria.push(unknown('budget', 'Budget', 'Pris: kommer med boendena'));
 
     return {
-      area, dest, climate, sizeStep, lifeStep, criteria,
+      dest, climate, sizeStep, criteria,
       excluded: excludedBy.length > 0, excludedBy,
       percent: weightedPercent(criteria)
     };
@@ -324,50 +327,51 @@
 
   // ---------- Urval och rankning ----------
 
-  /** Vilka resmål som ska rankas, utifrån "Vet ni vart ni vill åka?". */
-  function pickDestinations(data, prefs, ctx) {
-    const d = prefs.dest;
-    if (d.known === 'yes') {
-      const q = (d.place || '').trim().toLowerCase();
-      if (!q) return { dests: data.destinations, note: 'Inget resmål angivet – visar alla testresmål.' };
-      const hit = (s) => s && (s.toLowerCase().includes(q) || q.includes(s.toLowerCase()));
-      const areaDests = data.areas.filter((a) => hit(a.name)).map((a) => a.dest);
-      const dests = data.destinations.filter((x) =>
-        hit(x.name) || hit(x.region) || hit(x.country) || areaDests.includes(x.id));
-      if (dests.length) return { dests, note: '' };
-      return {
-        dests: data.destinations,
-        note: `Det finns ingen testdata för "${d.place}" än – visar alla testresmål.`
-      };
-    }
-
-    // Vet inte: filtrera på världsdel och region, välj sedan ut på klimat.
-    let pool = data.destinations.filter((x) => x.continent === d.continent &&
-      (!d.region || d.region === 'alla' || x.region === d.region));
-    if (!pool.length) {
-      return { dests: [], note: `Det finns ingen testdata för ${d.region && d.region !== 'alla' ? d.region : d.continent} än.` };
-    }
-    const ranked = pool.map((dest) => {
-      const crit = climateCriteria(climateFor(dest, null, ctx.months), prefs);
-      return { dest, score: weightedPercent(crit) };
-    }).sort((a, b) => b.score - a.score);
-    let keep = ranked.filter((r) => r.score >= 50);
-    if (!keep.length) keep = ranked.slice(0, 1);
-    return { dests: keep.map((r) => r.dest), note: '', suggested: true };
+  function norm(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
   }
 
-  function rankAreas(data, prefs, ctx) {
-    const pick = pickDestinations(data, prefs, ctx);
-    const ids = pick.dests.map((x) => x.id);
-    const results = data.areas
-      .filter((a) => ids.includes(a.dest))
-      .map((a) => scoreArea(a, data.destinations.find((x) => x.id === a.dest), prefs, ctx));
-    const included = results.filter((r) => !r.excluded).sort((a, b) => b.percent - a.percent);
-    const excluded = results.filter((r) => r.excluded);
-    return { included, excluded, note: pick.note, suggested: !!pick.suggested };
+  /** Vilka resmål som ska rankas, utifrån "Vet ni vart ni vill åka?". */
+  function pickDestinations(all, prefs) {
+    const d = prefs.dest;
+    if (d.known === 'yes') {
+      const q = norm(d.place);
+      if (!q) return { list: [], note: 'Skriv vart ni vill åka, eller välj "Nej, ge förslag".', free: true };
+      const hit = (s) => s && (norm(s).includes(q) || q.includes(norm(s)));
+      const list = all.filter((x) => hit(x.namn) || hit(x.wikidataNamn) || hit(x.omrade) || hit(x.land) || hit(x.region));
+      if (list.length) return { list, note: '', free: true };
+      return { list: [], free: true, note: `"${d.place}" finns inte i listan över resmål än. Välj "Nej, ge förslag" för att se resmål i en region.` };
+    }
+    const list = all.filter((x) => x.varldsdel === d.continent && (!d.region || d.region === 'alla' || x.region === d.region));
+    if (!list.length) {
+      return { list: [], note: `Det finns inga resmål för ${d.region && d.region !== 'alla' ? d.region : d.continent} än.` };
+    }
+    return { list, note: '' };
+  }
+
+  /**
+   * Rankar i två steg, så att Google bara behöver frågas om de bästa:
+   * 1. Alla resmål poängsätts på det som inte kräver anrop (klimat, storlek).
+   * 2. De `shortlistSize` bästa poängsätts igen med avstånd från Google.
+   * Resultatet: shortlist (sorterad), övriga (sorterade på steg 1) och bortsorterade.
+   */
+  function rankDestinations(all, prefs, ctx, nearbyById, shortlistSize) {
+    const pick = pickDestinations(all, prefs);
+    const stage1 = pick.list
+      .map((dest) => scoreDestination(dest, undefined, prefs, ctx))
+      .sort((a, b) => b.percent - a.percent);
+    const n = shortlistSize || 12;
+    const top = stage1.slice(0, n).map((r) => scoreDestination(r.dest, nearbyById && nearbyById[r.dest.id], prefs, ctx));
+    const included = top.filter((r) => !r.excluded).sort((a, b) => b.percent - a.percent);
+    const excluded = top.filter((r) => r.excluded);
+    return { included, excluded, rest: stage1.slice(n), shortlist: top.map((r) => r.dest), note: pick.note, free: !!pick.free };
   }
 
   // ---------- Format ----------
+
+  function formatInt(n) {
+    return Math.round(n).toLocaleString('sv-SE').replace(/,/g, ' ');
+  }
 
   function formatKr(n) {
     return Math.round(n).toLocaleString('sv-SE').replace(/,/g, ' ') + ' kr';
@@ -378,7 +382,7 @@
     NEARBY_DEFAULTS, SPEED, MODE_LABEL, LODGING, MONTHS,
     stepPosition, spanScore, rangeScore, distanceScore,
     nightsBetween, resolveDates, calcRooms, budgetPPN, splitCost,
-    climateFor, scoreArea, pickDestinations, rankAreas, nearbyKey, formatKr, formatMinutes
+    climateFor, scoreDestination, pickDestinations, rankDestinations, nearbyKey, formatKr, formatInt, formatMinutes
   };
 
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

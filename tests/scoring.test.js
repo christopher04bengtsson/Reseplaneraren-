@@ -67,44 +67,78 @@ test('datum: nätter och månad', () => {
   assert.strictEqual(m.checkout, '2027-08-06');
 });
 
-// En rankning med testdata
-global.window = {};
-require('../js/testdata.js');
-const DATA = global.window.RP.TESTDATA;
-const prefs = {
+// ---------- Resmålslistan (SPEC-v2, steg 1) ----------
+
+const RES = require('../data/resmal.json');
+const ALL = RES.resmal;
+
+test('regionerna i Europa är de sju i SPEC-v2', () => {
+  assert.deepStrictEqual(RES.regioner.Europa.map((r) => r.namn), [
+    'Medelhavet', 'Kanarieöarna', 'Alperna', 'Atlantkusten', 'Norden', 'Brittiska öarna', 'Centraleuropas städer'
+  ]);
+});
+
+test('minst 10 resmål per region, från minst 4 länder (eller alla regionens länder)', () => {
+  for (const reg of RES.regioner.Europa) {
+    const list = ALL.filter((x) => x.region === reg.namn);
+    const lander = new Set(list.map((x) => x.land));
+    assert.ok(list.length >= 10, `${reg.namn}: ${list.length} resmål`);
+    assert.ok(lander.size >= Math.min(4, reg.lander.length), `${reg.namn}: ${lander.size} länder`);
+    for (const x of list) assert.ok(reg.lander.includes(x.land), `${x.namn} ligger i ${x.land}, inte i ${reg.namn}`);
+  }
+});
+
+test('varje resmål har koordinater och Wikidata-källa', () => {
+  for (const x of ALL) {
+    assert.ok(typeof x.lat === 'number' && typeof x.lng === 'number', x.namn);
+    assert.match(x.wikidata, /^Q\d+$/, x.namn);
+    assert.strictEqual(x.klimat.tMax.length, 12, x.namn);
+  }
+});
+
+test('Chamonix är ett resmål i Alperna men inte ett regionval', () => {
+  const regionNamn = Object.values(RES.regioner).flat().map((r) => r.namn);
+  assert.ok(!regionNamn.some((n) => /chamonix/i.test(n)));
+  const c = ALL.find((x) => /chamonix/i.test(x.namn));
+  assert.ok(c && c.region === 'Alperna');
+});
+
+const basePrefs = {
   group: { total: 10, couples: 3, children: 0, ownRoom: 0 },
-  dest: { known: 'yes', place: 'Mallorca' },
-  climate: { temp: [1, 2], tempWeight: 2, swim: false, seaMin: 21, avoidRain: false, rainMax: 1 },
+  dest: { known: 'no', place: '', continent: 'Europa', region: 'Alperna' },
+  climate: { temp: [1, 2], tempWeight: 2, avoidRain: false, rainMax: 1 },
   lodging: ['house'],
   town: { size: [0, 2], sizeWeight: 1, life: [1, 3], lifeWeight: 1 },
-  nearby: [{ key: 'beach', label: 'Strand', weight: 3, mode: 'walk', minutes: 10 }],
+  nearby: [{ key: 'beach', label: 'Strand', weight: 2, mode: 'walk', minutes: 10 }],
   budget: { mode: 'pppn', amount: 900, weight: 1 }
 };
-const ctx = { months: [5], budgetPPN: 900 };
+const juni = S.resolveDates({ flex: 'exact', from: '2027-06-12', to: '2027-06-19' });
+const ctxJuni = { months: juni.months, budgetPPN: 900 };
 
-test('måste finnas sorterar bort områden', () => {
-  const res = S.rankAreas(DATA, prefs, ctx);
-  assert.ok(res.included.length > 0);
-  for (const r of res.included) assert.ok(r.area.dest === 'mallorca');
-  assert.ok(res.excluded.some((r) => r.area.id === 'soller')); // strand 2,6 km
-  assert.ok(res.included.every((r) => r.area.nearby.beach <= 800));
+test('Europa, Alperna: Chamonix kan dyka upp som resmål', () => {
+  const res = S.rankDestinations(ALL, basePrefs, ctxJuni, null, 12);
+  const alla = [...res.included, ...res.excluded, ...res.rest].map((r) => r.dest.namn);
+  assert.ok(alla.some((n) => /chamonix/i.test(n)));
+  assert.ok([...res.included, ...res.rest].every((r) => r.dest.region === 'Alperna'));
 });
 
-test('procent är sorterade och mellan 0 och 100', () => {
-  const res = S.rankAreas(DATA, { ...prefs, nearby: [] }, ctx);
-  const p = res.included.map((r) => r.percent);
-  assert.deepStrictEqual(p, [...p].sort((a, b) => b - a));
-  assert.ok(p.every((x) => x >= 0 && x <= 100));
+test('saknade avstånd räknas inte in i procenten', () => {
+  const res = S.rankDestinations(ALL, basePrefs, ctxJuni, null, 12);
+  const top = res.included[0];
+  assert.ok(top.criteria.some((c) => c.unknown && c.id === 'near:beach'));
+  assert.ok(top.percent >= 0 && top.percent <= 100);
 });
 
-test('vet inte: klimatet väljer resmål i regionen', () => {
-  const res = S.rankAreas(DATA, {
-    ...prefs, nearby: [],
-    dest: { known: 'no', continent: 'Europa', region: 'alla' },
-    climate: { ...prefs.climate, temp: [2, 3], swim: true }
-  }, { months: [6], budgetPPN: 0 });
-  assert.ok(res.suggested);
-  assert.ok(!res.included.some((r) => r.dest.id === 'chamonix'));
+test('eget val av ort: bara den orten', () => {
+  const res = S.rankDestinations(ALL, { ...basePrefs, dest: { known: 'yes', place: 'Chamonix' } }, ctxJuni, null, 12);
+  assert.strictEqual(res.included.length, 1);
+  assert.ok(res.free);
+});
+
+test('okänd ort ger ett ärligt meddelande, inga påhittade förslag', () => {
+  const res = S.rankDestinations(ALL, { ...basePrefs, dest: { known: 'yes', place: 'Atlantis' } }, ctxJuni, null, 12);
+  assert.strictEqual(res.included.length, 0);
+  assert.match(res.note, /finns inte i listan/);
 });
 
 console.log(`\n${n} tester gick igenom.`);

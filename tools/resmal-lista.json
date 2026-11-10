@@ -1,0 +1,943 @@
+{
+ "lander": {
+  "Spanien": "Q29",
+  "Frankrike": "Q142",
+  "Italien": "Q38",
+  "Kroatien": "Q224",
+  "Grekland": "Q41",
+  "Turkiet": "Q43",
+  "Cypern": "Q229",
+  "Malta": "Q233",
+  "Schweiz": "Q39",
+  "Österrike": "Q40",
+  "Tyskland": "Q183",
+  "Slovenien": "Q215",
+  "Portugal": "Q45",
+  "Sverige": "Q34",
+  "Norge": "Q20",
+  "Danmark": "Q35",
+  "Finland": "Q33",
+  "Island": "Q189",
+  "Storbritannien": "Q145",
+  "Irland": "Q27",
+  "Tjeckien": "Q213",
+  "Ungern": "Q28",
+  "Nederländerna": "Q55"
+ },
+ "resmal": [
+  {
+   "namn": "Sóller",
+   "sok": "Sóller",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Mallorca",
+   "typ": "strand"
+  },
+  {
+   "namn": "Alcúdia",
+   "sok": "Alcúdia",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Mallorca",
+   "typ": "strand"
+  },
+  {
+   "namn": "Tossa de Mar",
+   "sok": "Tossa de Mar",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Costa Brava",
+   "typ": "strand"
+  },
+  {
+   "namn": "Nice",
+   "sok": "Nice",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Côte d'Azur",
+   "typ": "stad"
+  },
+  {
+   "namn": "Antibes",
+   "sok": "Antibes",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Côte d'Azur",
+   "typ": "strand"
+  },
+  {
+   "namn": "Calvi",
+   "sok": "Calvi",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Korsika",
+   "typ": "strand"
+  },
+  {
+   "namn": "Sorrento",
+   "sok": "Sorrento",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Amalfikusten",
+   "typ": "strand"
+  },
+  {
+   "namn": "Taormina",
+   "sok": "Taormina",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Sicilien",
+   "typ": "strand"
+  },
+  {
+   "namn": "Cefalù",
+   "sok": "Cefalù",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Sicilien",
+   "typ": "strand"
+  },
+  {
+   "namn": "Split",
+   "sok": "Split",
+   "land": "Kroatien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Dalmatien",
+   "typ": "stad"
+  },
+  {
+   "namn": "Dubrovnik",
+   "sok": "Dubrovnik",
+   "land": "Kroatien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Dalmatien",
+   "typ": "stad"
+  },
+  {
+   "namn": "Makarska",
+   "sok": "Makarska",
+   "land": "Kroatien",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Dalmatien",
+   "typ": "strand"
+  },
+  {
+   "namn": "Chania",
+   "sok": "Chania",
+   "land": "Grekland",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Kreta",
+   "typ": "stad"
+  },
+  {
+   "namn": "Rethymno",
+   "sok": "Rethymno",
+   "land": "Grekland",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Kreta",
+   "typ": "strand"
+  },
+  {
+   "namn": "Rhodos",
+   "sok": "Rhodes",
+   "land": "Grekland",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Rhodos",
+   "typ": "stad",
+   "qid": "Q188731"
+  },
+  {
+   "namn": "Antalya",
+   "sok": "Antalya",
+   "land": "Turkiet",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Turkiska rivieran",
+   "typ": "stad"
+  },
+  {
+   "namn": "Kaş",
+   "sok": "Kaş",
+   "land": "Turkiet",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Turkiska rivieran",
+   "typ": "strand"
+  },
+  {
+   "namn": "Bodrum",
+   "sok": "Bodrum",
+   "land": "Turkiet",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "Egeiska kusten",
+   "typ": "strand"
+  },
+  {
+   "namn": "Paphos",
+   "sok": "Paphos",
+   "land": "Cypern",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "",
+   "typ": "strand"
+  },
+  {
+   "namn": "Sliema",
+   "sok": "Sliema",
+   "land": "Malta",
+   "varldsdel": "Europa",
+   "region": "Medelhavet",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Las Palmas",
+   "sok": "Las Palmas de Gran Canaria",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Gran Canaria",
+   "typ": "stad"
+  },
+  {
+   "namn": "Mogán",
+   "sok": "Mogán",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Gran Canaria",
+   "typ": "strand"
+  },
+  {
+   "namn": "San Bartolomé de Tirajana (Maspalomas)",
+   "sok": "San Bartolomé de Tirajana",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Gran Canaria",
+   "typ": "strand"
+  },
+  {
+   "namn": "Santa Cruz de Tenerife",
+   "sok": "Santa Cruz de Tenerife",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Teneriffa",
+   "typ": "stad"
+  },
+  {
+   "namn": "Puerto de la Cruz",
+   "sok": "Puerto de la Cruz",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Teneriffa",
+   "typ": "strand"
+  },
+  {
+   "namn": "Adeje",
+   "sok": "Adeje",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Teneriffa",
+   "typ": "strand"
+  },
+  {
+   "namn": "Arrecife",
+   "sok": "Arrecife",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Lanzarote",
+   "typ": "stad"
+  },
+  {
+   "namn": "Yaiza (Playa Blanca)",
+   "sok": "Yaiza",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Lanzarote",
+   "typ": "strand"
+  },
+  {
+   "namn": "La Oliva (Corralejo)",
+   "sok": "La Oliva",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Fuerteventura",
+   "typ": "strand"
+  },
+  {
+   "namn": "Puerto del Rosario",
+   "sok": "Puerto del Rosario",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "Fuerteventura",
+   "typ": "stad"
+  },
+  {
+   "namn": "Los Llanos de Aridane",
+   "sok": "Los Llanos de Aridane",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "La Palma",
+   "typ": "berg"
+  },
+  {
+   "namn": "San Sebastián de La Gomera",
+   "sok": "San Sebastián de La Gomera",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Kanarieöarna",
+   "omrade": "La Gomera",
+   "typ": "strand"
+  },
+  {
+   "namn": "Chamonix",
+   "sok": "Chamonix-Mont-Blanc",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Mont Blanc",
+   "typ": "berg"
+  },
+  {
+   "namn": "Annecy",
+   "sok": "Annecy",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Savojen",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Zermatt",
+   "sok": "Zermatt",
+   "land": "Schweiz",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Valais",
+   "typ": "berg"
+  },
+  {
+   "namn": "Interlaken",
+   "sok": "Interlaken",
+   "land": "Schweiz",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Berner Oberland",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Luzern",
+   "sok": "Lucerne",
+   "land": "Schweiz",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Vierwaldstättersjön",
+   "typ": "stad"
+  },
+  {
+   "namn": "Cortina d'Ampezzo",
+   "sok": "Cortina d'Ampezzo",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Dolomiterna",
+   "typ": "berg"
+  },
+  {
+   "namn": "Ortisei",
+   "sok": "Ortisei",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Dolomiterna",
+   "typ": "berg"
+  },
+  {
+   "namn": "Riva del Garda",
+   "sok": "Riva del Garda",
+   "land": "Italien",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Gardasjön",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Mayrhofen",
+   "sok": "Mayrhofen",
+   "land": "Österrike",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Tyrolen",
+   "typ": "berg"
+  },
+  {
+   "namn": "Innsbruck",
+   "sok": "Innsbruck",
+   "land": "Österrike",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Tyrolen",
+   "typ": "stad"
+  },
+  {
+   "namn": "Hallstatt",
+   "sok": "Hallstatt",
+   "land": "Österrike",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Salzkammergut",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Garmisch-Partenkirchen",
+   "sok": "Garmisch-Partenkirchen",
+   "land": "Tyskland",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Bayern",
+   "typ": "berg"
+  },
+  {
+   "namn": "Berchtesgaden",
+   "sok": "Berchtesgaden",
+   "land": "Tyskland",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Bayern",
+   "typ": "berg"
+  },
+  {
+   "namn": "Bled",
+   "sok": "Bled",
+   "land": "Slovenien",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Julianska Alperna",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Bovec",
+   "sok": "Bovec",
+   "land": "Slovenien",
+   "varldsdel": "Europa",
+   "region": "Alperna",
+   "omrade": "Julianska Alperna",
+   "typ": "berg"
+  },
+  {
+   "namn": "Lagos",
+   "sok": "Lagos",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Algarve",
+   "typ": "strand"
+  },
+  {
+   "namn": "Albufeira",
+   "sok": "Albufeira",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Algarve",
+   "typ": "strand"
+  },
+  {
+   "namn": "Tavira",
+   "sok": "Tavira",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Algarve",
+   "typ": "strand"
+  },
+  {
+   "namn": "Cascais",
+   "sok": "Cascais",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Lissabonkusten",
+   "typ": "strand"
+  },
+  {
+   "namn": "Ericeira",
+   "sok": "Ericeira",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Lissabonkusten",
+   "typ": "strand"
+  },
+  {
+   "namn": "Nazaré",
+   "sok": "Nazaré",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Silverkusten",
+   "typ": "strand"
+  },
+  {
+   "namn": "Porto",
+   "sok": "Porto",
+   "land": "Portugal",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "San Sebastián",
+   "sok": "San Sebastián",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Baskien",
+   "typ": "stad"
+  },
+  {
+   "namn": "Santander",
+   "sok": "Santander",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Kantabrien",
+   "typ": "stad"
+  },
+  {
+   "namn": "Sanxenxo",
+   "sok": "Sanxenxo",
+   "land": "Spanien",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Galicien",
+   "typ": "strand"
+  },
+  {
+   "namn": "Biarritz",
+   "sok": "Biarritz",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Baskien",
+   "typ": "strand"
+  },
+  {
+   "namn": "Arcachon",
+   "sok": "Arcachon",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Gironde",
+   "typ": "strand"
+  },
+  {
+   "namn": "La Rochelle",
+   "sok": "La Rochelle",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Saint-Malo",
+   "sok": "Saint-Malo",
+   "land": "Frankrike",
+   "varldsdel": "Europa",
+   "region": "Atlantkusten",
+   "omrade": "Bretagne",
+   "typ": "stad"
+  },
+  {
+   "namn": "Visby",
+   "sok": "Visby",
+   "land": "Sverige",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Gotland",
+   "typ": "stad"
+  },
+  {
+   "namn": "Vaxholm",
+   "sok": "Vaxholm",
+   "land": "Sverige",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Stockholms skärgård",
+   "typ": "strand",
+   "qid": "Q1001109"
+  },
+  {
+   "namn": "Åre",
+   "sok": "Åre",
+   "land": "Sverige",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Jämtland",
+   "typ": "berg",
+   "qid": "Q271138"
+  },
+  {
+   "namn": "Båstad",
+   "sok": "Båstad",
+   "land": "Sverige",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Skåne",
+   "typ": "strand",
+   "qid": "Q1011844"
+  },
+  {
+   "namn": "Svolvær",
+   "sok": "Svolvær",
+   "land": "Norge",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Lofoten",
+   "typ": "berg"
+  },
+  {
+   "namn": "Bergen",
+   "sok": "Bergen",
+   "land": "Norge",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Vestlandet",
+   "typ": "stad"
+  },
+  {
+   "namn": "Ålesund",
+   "sok": "Ålesund",
+   "land": "Norge",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Vestlandet",
+   "typ": "stad"
+  },
+  {
+   "namn": "Rønne",
+   "sok": "Rønne",
+   "land": "Danmark",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Bornholm",
+   "typ": "strand"
+  },
+  {
+   "namn": "Skagen",
+   "sok": "Skagen",
+   "land": "Danmark",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Nordjylland",
+   "typ": "strand"
+  },
+  {
+   "namn": "Köpenhamn",
+   "sok": "Copenhagen",
+   "land": "Danmark",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Helsingfors",
+   "sok": "Helsinki",
+   "land": "Finland",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Rovaniemi",
+   "sok": "Rovaniemi",
+   "land": "Finland",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "Lappland",
+   "typ": "berg"
+  },
+  {
+   "namn": "Hangö",
+   "sok": "Hanko",
+   "land": "Finland",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "",
+   "typ": "strand"
+  },
+  {
+   "namn": "Reykjavik",
+   "sok": "Reykjavík",
+   "land": "Island",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Akureyri",
+   "sok": "Akureyri",
+   "land": "Island",
+   "varldsdel": "Europa",
+   "region": "Norden",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "St Ives",
+   "sok": "St Ives",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Cornwall",
+   "typ": "strand",
+   "qid": "Q724182"
+  },
+  {
+   "namn": "Falmouth",
+   "sok": "Falmouth",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Cornwall",
+   "typ": "strand"
+  },
+  {
+   "namn": "Brighton",
+   "sok": "Brighton",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "",
+   "typ": "strand"
+  },
+  {
+   "namn": "Bath",
+   "sok": "Bath",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Keswick",
+   "sok": "Keswick",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Lake District",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Edinburgh",
+   "sok": "Edinburgh",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Skottland",
+   "typ": "stad"
+  },
+  {
+   "namn": "Inverness",
+   "sok": "Inverness",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Skotska höglandet",
+   "typ": "stad"
+  },
+  {
+   "namn": "Fort William",
+   "sok": "Fort William",
+   "land": "Storbritannien",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Skotska höglandet",
+   "typ": "berg"
+  },
+  {
+   "namn": "Dublin",
+   "sok": "Dublin",
+   "land": "Irland",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Galway",
+   "sok": "Galway",
+   "land": "Irland",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Killarney",
+   "sok": "Killarney",
+   "land": "Irland",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Kerry",
+   "typ": "sjö"
+  },
+  {
+   "namn": "Dingle",
+   "sok": "Dingle",
+   "land": "Irland",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Kerry",
+   "typ": "strand"
+  },
+  {
+   "namn": "Kinsale",
+   "sok": "Kinsale",
+   "land": "Irland",
+   "varldsdel": "Europa",
+   "region": "Brittiska öarna",
+   "omrade": "Cork",
+   "typ": "strand"
+  },
+  {
+   "namn": "Prag",
+   "sok": "Prague",
+   "land": "Tjeckien",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Český Krumlov",
+   "sok": "Český Krumlov",
+   "land": "Tjeckien",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Karlovy Vary",
+   "sok": "Karlovy Vary",
+   "land": "Tjeckien",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Wien",
+   "sok": "Vienna",
+   "land": "Österrike",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Salzburg",
+   "sok": "Salzburg",
+   "land": "Österrike",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Budapest",
+   "sok": "Budapest",
+   "land": "Ungern",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Eger",
+   "sok": "Eger",
+   "land": "Ungern",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Amsterdam",
+   "sok": "Amsterdam",
+   "land": "Nederländerna",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Utrecht",
+   "sok": "Utrecht",
+   "land": "Nederländerna",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "Berlin",
+   "sok": "Berlin",
+   "land": "Tyskland",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "",
+   "typ": "stad"
+  },
+  {
+   "namn": "München",
+   "sok": "Munich",
+   "land": "Tyskland",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "Bayern",
+   "typ": "stad"
+  },
+  {
+   "namn": "Dresden",
+   "sok": "Dresden",
+   "land": "Tyskland",
+   "varldsdel": "Europa",
+   "region": "Centraleuropas städer",
+   "omrade": "Sachsen",
+   "typ": "stad"
+  }
+ ]
+}
