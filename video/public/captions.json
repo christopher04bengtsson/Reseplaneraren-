@@ -1,0 +1,13 @@
+[
+  { "text": "Welcome", "startMs": 500, "endMs": 1000, "timestampMs": 750, "confidence": 1 },
+  { "text": " to", "startMs": 1000, "endMs": 1200, "timestampMs": 1100, "confidence": 1 },
+  { "text": " your", "startMs": 1200, "endMs": 1500, "timestampMs": 1350, "confidence": 1 },
+  { "text": " first", "startMs": 1500, "endMs": 1900, "timestampMs": 1700, "confidence": 1 },
+  { "text": " 3D", "startMs": 1900, "endMs": 2400, "timestampMs": 2150, "confidence": 1 },
+  { "text": " video", "startMs": 2400, "endMs": 3000, "timestampMs": 2700, "confidence": 1 },
+  { "text": " made", "startMs": 3400, "endMs": 3700, "timestampMs": 3550, "confidence": 1 },
+  { "text": " with", "startMs": 3700, "endMs": 3900, "timestampMs": 3800, "confidence": 1 },
+  { "text": " Three.js", "startMs": 3900, "endMs": 4600, "timestampMs": 4250, "confidence": 1 },
+  { "text": " and", "startMs": 4600, "endMs": 4800, "timestampMs": 4700, "confidence": 1 },
+  { "text": " Remotion", "startMs": 4800, "endMs": 5600, "timestampMs": 5200, "confidence": 1 }
+]

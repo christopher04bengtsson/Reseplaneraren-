@@ -1,0 +1,34 @@
+{
+  "name": "video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3D animated videos with Three.js (React Three Fiber) and Remotion",
+  "type": "module",
+  "scripts": {
+    "dev": "remotion studio",
+    "render": "remotion render Main3DVideo out/video.mp4",
+    "still": "remotion still Main3DVideo out/thumbnail.png --frame=60",
+    "transcribe": "node scripts/transcribe.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-three/drei": "10.7.9",
+    "@react-three/fiber": "9.8.2",
+    "@remotion/captions": "4.0.542",
+    "@remotion/cli": "4.0.542",
+    "@remotion/install-whisper-cpp": "4.0.542",
+    "@remotion/media": "4.0.542",
+    "@remotion/media-utils": "4.0.542",
+    "@remotion/three": "4.0.542",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "remotion": "4.0.542",
+    "three": "0.187.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/three": "0.187.0",
+    "typescript": "5.9.3"
+  }
+}
