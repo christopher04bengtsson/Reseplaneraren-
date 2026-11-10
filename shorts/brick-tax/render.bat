@@ -18,13 +18,15 @@ call npm rebuild esbuild >nul 2>&1
 if not exist out mkdir out
 if exist out\full_silent.mp4 del /q out\full_silent.mp4
 if exist final.mp4 move /y final.mp4 final_previous.mp4 >nul
+echo Getting the render browser...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0get_browser.ps1"
 echo [3/4] Rendering video (watch the frame count go up)...
-call npx remotion render src/index.jsx Story out\full_silent.mp4 --gl=angle --concurrency=4 --image-format=jpeg --jpeg-quality=92 --crf=17
+call npx remotion render src/index.jsx Story out\full_silent.mp4 --gl=angle --concurrency=4 --image-format=jpeg --jpeg-quality=92 --crf=17 --browser-executable="%~dp0node_modules\.remotion\chrome-headless-shell\win64\chrome-headless-shell-win64\chrome-headless-shell.exe"
 if exist out\full_silent.mp4 goto mux
 echo.
 echo First try failed. Re-downloading the render browser and trying again...
-if exist node_modules\.remotion rmdir /s /q node_modules\.remotion
-call npx remotion render src/index.jsx Story out\full_silent.mp4 --gl=angle --concurrency=4 --image-format=jpeg --jpeg-quality=92 --crf=17
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0get_browser.ps1" -Force
+call npx remotion render src/index.jsx Story out\full_silent.mp4 --gl=angle --concurrency=4 --image-format=jpeg --jpeg-quality=92 --crf=17 --browser-executable="%~dp0node_modules\.remotion\chrome-headless-shell\win64\chrome-headless-shell-win64\chrome-headless-shell.exe"
 if not exist out\full_silent.mp4 goto fail
 :mux
 echo [4/4] Adding the voiceover...
