@@ -556,8 +556,13 @@
     if (!list.length) {
       return `${head}<p class="callout">Google hittade inga boenden med tillräckligt många omdömen här. Använd länkarna nedan.</p>`;
     }
+    const first = list.slice(0, 2), more = list.slice(2);
     return `${head}
-      <ul class="stays">${list.map((st) => stayCardHTML(st, d, ctx)).join('')}</ul>
+      <ul class="stays">${first.map((st) => stayCardHTML(st, d, ctx)).join('')}</ul>
+      ${more.length ? `<details class="more-stays">
+        <summary>Visa ${more.length} boenden till</summary>
+        <ul class="stays">${more.map((st) => stayCardHTML(st, d, ctx)).join('')}</ul>
+      </details>` : ''}
       <p class="muted small-print">Boenden och betyg från Google. Pris, lediga datum och antal rum ser du på Booking.</p>`;
   }
 
