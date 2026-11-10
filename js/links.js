@@ -34,9 +34,34 @@
     return 'https://www.booking.com/searchresults.sv.html?' + p.toString();
   }
 
+  /**
+   * Sökruta runt orten i kilometer. Små orter får en tät ruta, storstäder en större,
+   * så att Airbnb inte visar hela ön eller regionen.
+   */
+  function radiusKm(area) {
+    const inv = area.population || 0;
+    if (inv > 300000) return 5;
+    if (inv > 50000) return 3.5;
+    return 2.5;
+  }
+
   function airbnb(area, dest, ctx) {
-    const slug = encodeURIComponent(query(area, dest).replace(/, /g, '--').replace(/ /g, '-'));
+    const label = [area.name.split(' – ')[0], area.region, dest.name].filter(Boolean).join(', ');
+    const slug = encodeURIComponent(label.replace(/, /g, '--').replace(/ /g, '-'));
     const p = new URLSearchParams();
+    if (typeof area.lat === 'number') {
+      // Kartruta runt ortens mittpunkt: Airbnb söker då bara inom den.
+      const km = radiusKm(area);
+      const dLat = km / 111;
+      const dLng = km / (111 * Math.cos((area.lat * Math.PI) / 180));
+      p.set('ne_lat', (area.lat + dLat).toFixed(5));
+      p.set('ne_lng', (area.lng + dLng).toFixed(5));
+      p.set('sw_lat', (area.lat - dLat).toFixed(5));
+      p.set('sw_lng', (area.lng - dLng).toFixed(5));
+      p.set('zoom', km > 4 ? '12' : '13');
+      p.set('search_by_map', 'true');
+      p.set('search_type', 'user_map_move');
+    }
     if (ctx.dates.checkin) p.set('checkin', ctx.dates.checkin);
     if (ctx.dates.checkout) p.set('checkout', ctx.dates.checkout);
     p.set('adults', String(ctx.rooms.adults));

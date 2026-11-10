@@ -458,7 +458,7 @@
   const TYP_LABEL = { strand: 'Strand', stad: 'Stad', berg: 'Berg', 'sjö': 'Sjö' };
 
   /** Det länkarna behöver: ort och land. */
-  const linkArea = (d) => ({ name: d.namn });
+  const linkArea = (d) => ({ name: d.namn, region: d.omrade, lat: d.lat, lng: d.lng, population: d.invanare });
   const linkDest = (d) => ({ name: d.land, country: d.land });
 
   function cardHTML(r, i, ctx) {
