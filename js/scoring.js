@@ -322,7 +322,7 @@
       criteria.push({
         id: 'size', label: 'Ortens storlek', weight: prefs.town.sizeWeight,
         score: spanScore(sizePos, prefs.town.size),
-        text: `${SIZE_STEPS[sizeStep].label} (${formatInt(dest.invanare)} inv.)`
+        text: `${SIZE_STEPS[sizeStep].label} (${formatInt(dest.invanare)} inv.${dest.invanareKommun ? ' i kommunen' : ''})`
       });
     } else {
       criteria.push(unknown('size', 'Ortens storlek', 'Invånarantal saknas'));

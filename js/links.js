@@ -58,7 +58,6 @@
       p.set('ne_lng', (area.lng + dLng).toFixed(5));
       p.set('sw_lat', (area.lat - dLat).toFixed(5));
       p.set('sw_lng', (area.lng - dLng).toFixed(5));
-      p.set('zoom', km > 4 ? '12' : '13');
       p.set('search_by_map', 'true');
       p.set('search_type', 'user_map_move');
     }

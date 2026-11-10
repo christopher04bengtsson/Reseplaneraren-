@@ -216,22 +216,25 @@
    "typ": "stad"
   },
   {
-   "namn": "Mogán",
+   "namn": "Puerto de Mogán",
    "sok": "Mogán",
    "land": "Spanien",
    "varldsdel": "Europa",
    "region": "Kanarieöarna",
    "omrade": "Gran Canaria",
-   "typ": "strand"
+   "typ": "strand",
+   "qid": "Q1013333"
   },
   {
-   "namn": "San Bartolomé de Tirajana (Maspalomas)",
+   "namn": "Maspalomas",
    "sok": "San Bartolomé de Tirajana",
    "land": "Spanien",
    "varldsdel": "Europa",
    "region": "Kanarieöarna",
    "omrade": "Gran Canaria",
-   "typ": "strand"
+   "typ": "strand",
+   "qid": "Q580743",
+   "befolkningQid": "Q693258"
   },
   {
    "namn": "Santa Cruz de Tenerife",
@@ -252,13 +255,14 @@
    "typ": "strand"
   },
   {
-   "namn": "Adeje",
+   "namn": "Costa Adeje",
    "sok": "Adeje",
    "land": "Spanien",
    "varldsdel": "Europa",
    "region": "Kanarieöarna",
    "omrade": "Teneriffa",
-   "typ": "strand"
+   "typ": "strand",
+   "qid": "Q2998365"
   },
   {
    "namn": "Arrecife",
@@ -270,22 +274,24 @@
    "typ": "stad"
   },
   {
-   "namn": "Yaiza (Playa Blanca)",
+   "namn": "Playa Blanca",
    "sok": "Yaiza",
    "land": "Spanien",
    "varldsdel": "Europa",
    "region": "Kanarieöarna",
    "omrade": "Lanzarote",
-   "typ": "strand"
+   "typ": "strand",
+   "qid": "Q2000517"
   },
   {
-   "namn": "La Oliva (Corralejo)",
+   "namn": "Corralejo",
    "sok": "La Oliva",
    "land": "Spanien",
    "varldsdel": "Europa",
    "region": "Kanarieöarna",
    "omrade": "Fuerteventura",
-   "typ": "strand"
+   "typ": "strand",
+   "qid": "Q187978"
   },
   {
    "namn": "Puerto del Rosario",

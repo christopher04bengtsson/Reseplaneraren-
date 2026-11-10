@@ -441,7 +441,7 @@
         <rect x="0" y="0" width="${W}" height="${H}" rx="14" class="map-bg"></rect>
         ${pins}
       </svg>
-      <figcaption class="muted">Platshållare – Google-kartan kopplas in i steg 10.</figcaption>
+      <figcaption class="muted">Enkel karta – lägg in Google-nyckeln för en riktig karta.</figcaption>
     </figure>`;
   }
 
@@ -507,6 +507,79 @@
           <p class="muted">Källor: invånare från <a href="https://www.wikidata.org/wiki/${esc(d.wikidata)}" target="_blank" rel="noopener">Wikidata</a>${d.invanareAr ? ` (${d.invanareAr})` : ''}, klimat från Open-Meteo.</p>
         </details>
       </article>`;
+  }
+
+  // ---------- Google-kartan ----------
+
+  let mapsPromise = null;
+  let gmap = null;
+  let gmarkers = [];
+  let mapsFailed = false;
+
+  /** Laddar Google Maps JavaScript API en gång, med nyckeln från panelen. */
+  function loadMaps() {
+    if (mapsPromise) return mapsPromise;
+    mapsPromise = new Promise((resolve, reject) => {
+      window.gm_authFailure = () => { mapsFailed = true; reject(new Error('nyckeln nekades')); showSvgMapAgain(); };
+      window.__rpMapsReady = () => resolve(window.google.maps);
+      const sc = document.createElement('script');
+      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(RP.places.getKey()) +
+        '&v=weekly&loading=async&libraries=marker&language=sv&callback=__rpMapsReady';
+      sc.async = true;
+      sc.onerror = () => { mapsFailed = true; reject(new Error('kunde inte laddas')); };
+      document.head.appendChild(sc);
+    });
+    return mapsPromise;
+  }
+
+  let lastMapList = [];
+  function showSvgMapAgain() {
+    const box = document.getElementById('mapBox');
+    if (box) box.innerHTML = mapHTML(lastMapList) +
+      '<p class="muted small-print">Google-kartan kunde inte laddas. Kontrollera att Maps JavaScript API är aktiverat för nyckeln.</p>';
+    gmap = null;
+  }
+
+  async function updateMap(list) {
+    lastMapList = list;
+    const box = document.getElementById('mapBox');
+    if (!box) return;
+    if (!RP.places.enabled() || location.protocol === 'file:' || mapsFailed) {
+      box.innerHTML = mapHTML(list);
+      gmap = null;
+      return;
+    }
+    if (!list.length) { box.innerHTML = ''; gmap = null; return; }
+    let maps;
+    try { maps = await loadMaps(); } catch (e) { showSvgMapAgain(); return; }
+    if (!document.body.contains(box)) return;
+    if (!gmap || !box.querySelector('.gmap')) {
+      box.innerHTML = '<div class="gmap" role="region" aria-label="Karta över resmålen"></div>';
+      gmap = new maps.Map(box.querySelector('.gmap'), {
+        mapId: 'DEMO_MAP_ID', gestureHandling: 'cooperative', streetViewControl: false,
+        mapTypeControl: false, fullscreenControl: true
+      });
+    }
+    for (const m of gmarkers) m.map = null;
+    gmarkers = [];
+    const bounds = new maps.LatLngBounds();
+    list.forEach((r, i) => {
+      const pos = { lat: r.dest.lat, lng: r.dest.lng };
+      const pin = new maps.marker.PinElement({
+        glyph: String(i + 1), glyphColor: '#ffffff', background: '#ff6b4a', borderColor: '#ffffff', scale: 1.15
+      });
+      const m = new maps.marker.AdvancedMarkerElement({
+        map: gmap, position: pos, content: pin.element, title: `${i + 1}. ${r.dest.namn}, ${r.dest.land}`
+      });
+      m.addListener('click', () => {
+        const card = document.getElementById('area-' + r.dest.id);
+        if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+      gmarkers.push(m);
+      bounds.extend(pos);
+    });
+    if (list.length === 1) { gmap.setCenter(bounds.getCenter()); gmap.setZoom(11); }
+    else gmap.fitBounds(bounds, 40);
   }
 
   // ---------- Boenden (riktiga, från Google Places) ----------
@@ -600,7 +673,6 @@
       </details>` : '';
     return `${note}
       ${placesStatusHTML()}
-      ${mapHTML(res.included)}
       ${empty}
       <div class="cards">${res.included.map((r, i) => cardHTML(r, i, ctx)).join('')}</div>
       ${excluded}
@@ -699,7 +771,10 @@
               <div id="keyInner">${keyHTML()}</div>
             </details>
           </aside>
-          <div id="resultsMain"></div>
+          <div class="results-col">
+            <div id="mapBox"></div>
+            <div id="resultsMain"></div>
+          </div>
         </div>
       </section>`;
     refreshResults(false);
@@ -765,6 +840,7 @@
     }
     document.getElementById('summary').innerHTML = summaryHTML(res, ctx);
     document.getElementById('resultsMain').innerHTML = mainHTML(res, ctx);
+    updateMap(res.included);
   }
 
   // ---------- Ritning och händelser ----------

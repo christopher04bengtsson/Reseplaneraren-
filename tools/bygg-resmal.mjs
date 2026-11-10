@@ -41,6 +41,8 @@ const REGIONER = {
 };
 
 fs.mkdirSync(CACHE, { recursive: true });
+// Kort, stabil nyckel för cachen utifrån hela texten.
+const hash = (str) => { let h = 0; for (const c of str) h = (h * 31 + c.codePointAt(0)) >>> 0; return h.toString(36); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function getJSON(url, { cacheKey, pause = 0 } = {}) {
@@ -124,7 +126,7 @@ async function findEntities(items, lander) {
     const chunk = want.slice(k, k + 50);
     const data = await getJSON(
       `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims|labels|descriptions&languages=sv|en&ids=${chunk.join('|')}`,
-      { cacheKey: 'ents-' + chunk.join('-').slice(0, 120) + '-' + chunk.length, pause: 2000 }
+      { cacheKey: 'ents-' + hash(chunk.join('-')) + '-' + chunk.length, pause: 2000 }
     );
     Object.assign(entities, data.entities);
   }
@@ -180,7 +182,16 @@ for (const [n, item] of lista.resmal.entries()) {
   const coord = claimValue(e.claims.P625[0]);
   const lat = Math.round(coord.latitude * 10000) / 10000;
   const lng = Math.round(coord.longitude * 10000) / 10000;
-  const pop = latestPopulation(e);
+  // Är ortens eget invånartal orimligt i Wikidata används kommunens, och det märks ut.
+  let pop = latestPopulation(e);
+  let popKommun = false;
+  if (item.befolkningQid) {
+    const k = await getJSON(
+      `https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&props=claims&ids=${item.befolkningQid}`,
+      { cacheKey: 'pop-' + item.befolkningQid, pause: 1000 });
+    pop = latestPopulation(k.entities[item.befolkningQid]);
+    popKommun = true;
+  }
   const kl = await climate(lat, lng);
   const desc = (e.descriptions.en || e.descriptions.sv || {}).value || '';
   console.log(`${e.id}  ${pop.invanare ?? 'invånare saknas'}  ${desc}`);
@@ -198,6 +209,7 @@ for (const [n, item] of lista.resmal.entries()) {
     lat, lng,
     invanare: pop.invanare,
     invanareAr: pop.ar,
+    invanareKommun: popKommun || undefined,
     wikidata: e.id,
     wikidataNamn: (e.labels.sv || e.labels.en || {}).value || null,
     klimat: { tMax: kl.tMax, rain: kl.rain }
