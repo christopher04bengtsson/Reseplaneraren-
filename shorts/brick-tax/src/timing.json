@@ -1,0 +1,90 @@
+{
+ "fps": 30,
+ "duration": 59.38,
+ "shots": [
+  {
+   "key": "hook",
+   "start": 0.15,
+   "end": 4.219,
+   "words": 13,
+   "text": "He made his bricks twice as thick, because the tax man counted bricks."
+  },
+  {
+   "key": "war",
+   "start": 4.639,
+   "end": 8.922,
+   "words": 13,
+   "text": "In seventeen eighty-four, Britain needed money to pay for its war in America."
+  },
+  {
+   "key": "tax",
+   "start": 9.342,
+   "end": 13.727,
+   "words": 14,
+   "text": "Parliament put a tax on every single brick, two shillings and sixpence per thousand."
+  },
+  {
+   "key": "count",
+   "start": 14.147,
+   "end": 18.88,
+   "words": 15,
+   "text": "Officers walked into the brickyards and counted the wet bricks, row by row, before firing."
+  },
+  {
+   "key": "climb",
+   "start": 19.3,
+   "end": 23.553,
+   "words": 13,
+   "text": "And the price kept climbing, to four shillings per thousand by seventeen ninety-four."
+  },
+  {
+   "key": "but",
+   "start": 23.973,
+   "end": 27.886,
+   "words": 15,
+   "text": "But the law only counted bricks. It never said how big a brick could be."
+  },
+  {
+   "key": "yousee",
+   "start": 28.306,
+   "end": 33.681,
+   "words": 18,
+   "text": "You see, it's like paying for pizza by the slice. Cut bigger slices, and you pay for fewer."
+  },
+  {
+   "key": "wilkes",
+   "start": 34.101,
+   "end": 38.661,
+   "words": 13,
+   "text": "In Measham, brickmaker Joseph Wilkes made bricks about twice as thick as normal."
+  },
+  {
+   "key": "gobs",
+   "start": 39.081,
+   "end": 42.951,
+   "words": 14,
+   "text": "They became known as Wilkes' gobs, and a wall needed far fewer of them."
+  },
+  {
+   "key": "then",
+   "start": 43.371,
+   "end": 48.641,
+   "words": 17,
+   "text": "Then the government struck back. Any brick bigger than ten by five by three inches paid double."
+  },
+  {
+   "key": "so",
+   "start": 49.061,
+   "end": 52.848,
+   "words": 11,
+   "text": "So brickmakers shrank their moulds again, and the giant bricks stopped."
+  },
+  {
+   "key": "close",
+   "start": 53.268,
+   "end": 58.627,
+   "words": 16,
+   "text": "The tax lasted until eighteen fifty. But some of Wilkes' giant bricks are still standing today."
+  }
+ ]
+}
