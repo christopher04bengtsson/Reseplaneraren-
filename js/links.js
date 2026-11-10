@@ -47,11 +47,31 @@
     if (ctx.lodging.includes('house') || ctx.lodging.includes('apartment')) types.push('Entire home/apt');
     if (ctx.lodging.includes('hotel')) types.push('Hotel room');
     types.forEach((t) => p.append('room_types[]', t));
+    for (const a of root.RP.scoring.AMENITIES) {
+      if ((ctx.amenities || []).includes(a.key)) p.append('amenities[]', String(a.airbnb));
+    }
     if (ctx.budgetPPN > 0 && ctx.dates.nights) {
       // Airbnb filtrerar på pris per natt för hela boendet
       p.set('price_max', String(Math.round(ctx.budgetPPN * ctx.rooms.total)));
     }
     return `https://www.airbnb.se/s/${slug}/homes?` + p.toString();
+  }
+
+  /**
+   * Booking-sökning på ett specifikt boendes namn, med datum, gäster och rum.
+   * Boendet hamnar oftast överst, och Booking visar pris och om det är ledigt.
+   */
+  function bookingStay(stayName, place, ctx) {
+    const p = new URLSearchParams();
+    p.set('ss', `${stayName}, ${place}`);
+    if (ctx.dates.checkin) p.set('checkin', ctx.dates.checkin);
+    if (ctx.dates.checkout) p.set('checkout', ctx.dates.checkout);
+    p.set('group_adults', String(ctx.rooms.adults));
+    p.set('group_children', String(ctx.rooms.children));
+    for (let i = 0; i < ctx.rooms.children; i++) p.append('age', String(CHILD_AGE));
+    p.set('no_rooms', String(ctx.stayCat === 'hotel' ? ctx.rooms.bedrooms : 1));
+    p.set('selected_currency', 'SEK');
+    return 'https://www.booking.com/searchresults.sv.html?' + p.toString();
   }
 
   /** Det som inte går att skicka med i länken – bockas av för hand. */
@@ -64,6 +84,8 @@
     }
     if (ctx.rooms.doubleBeds) list.push(`Minst ${ctx.rooms.doubleBeds} dubbelsängar för paren`);
     if (Number(prefs.group.ownRoom)) list.push(`${prefs.group.ownRoom} st vill ha eget rum`);
+    const am = root.RP.scoring.AMENITIES.filter((a) => (ctx.amenities || []).includes(a.key));
+    if (am.length) list.push(`Booking: välj ${am.map((a) => a.label.toLowerCase()).join(', ')} under Faciliteter`);
     if (ctx.budgetPPN > 0) {
       list.push(`Budget ca ${S.formatKr(ctx.budgetPPN)} per person och natt (Booking: ställ in pris själv)`);
     }
@@ -76,5 +98,5 @@
   }
 
   root.RP = root.RP || {};
-  root.RP.links = { booking, airbnb, checklist };
+  root.RP.links = { booking, airbnb, bookingStay, checklist };
 })(window);

@@ -47,6 +47,7 @@
       dates: defaultDates(),
       climate: { temp: [1, 2], tempWeight: 2, avoidRain: false, rainMax: 1 },
       lodging: ['house'],
+      amenities: [],
       town: { size: [0, 2], sizeWeight: 1, life: [1, 3], lifeWeight: 1 },
       nearby: S.NEARBY_DEFAULTS.map((n) => ({
         key: n.key, label: n.label, icon: n.icon,
@@ -62,7 +63,7 @@
   function load() {
     try {
       const s = JSON.parse(localStorage.getItem(STORE));
-      if (s && s.version === 2) return s;
+      if (s && s.version === 2) { s.amenities = s.amenities || []; return s; }
     } catch (e) { /* ingen sparad data */ }
     return null;
   }
@@ -83,7 +84,7 @@
     const rooms = S.calcRooms(state.group);
     const dates = S.resolveDates(state.dates);
     return {
-      rooms, dates, months: dates.months, lodging: state.lodging,
+      rooms, dates, months: dates.months, lodging: state.lodging, amenities: state.amenities,
       budgetPPN: S.budgetPPN(state.budget, rooms.total, dates.nights)
     };
   }
@@ -320,7 +321,17 @@
         }).join('')}
       </div>
       <p class="hint">Ni behöver minst ${S.calcRooms(state.group).bedrooms} sovrum.
-        Hus och villor brukar passa stora sällskap bäst.</p>`,
+        Hus och villor brukar passa stora sällskap bäst.</p>
+      <hr>
+      <p class="field-label">Vad ska boendet ha?</p>
+      <p class="muted">Skickas med som filter till Airbnb.</p>
+      <div class="chips">
+        ${S.AMENITIES.map((a) => {
+          const on = state.amenities.includes(a.key);
+          return `<button type="button" class="chip" data-action="amenity" data-key="${a.key}" aria-pressed="${on}">
+            <span aria-hidden="true">${a.icon}</span> ${a.label}${on ? ' <span aria-hidden="true">✓</span>' : ''}</button>`;
+        }).join('')}
+      </div>`,
 
     // 5. Typ av ort
     () => `
@@ -477,9 +488,10 @@
           ${clim.length ? `<li>${clim.join(' · ')}</li>` : ''}
         </ul>
         <ul class="facts">${facts.map(factHTML).join('')}</ul>
+        ${staysHTML(d, i, ctx)}
         <div class="actions">
-          <a class="btn booking" href="${L.booking(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Sök på Booking</a>
-          <a class="btn airbnb" href="${L.airbnb(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Sök på Airbnb</a>
+          <a class="btn booking" href="${L.booking(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Fler på Booking</a>
+          <a class="btn airbnb" href="${L.airbnb(linkArea(d), linkDest(d), ctx)}" target="_blank" rel="noopener">Fler på Airbnb</a>
         </div>
         ${checklist.length ? `<details class="checklist">
           <summary>Att bocka av på sajten (${checklist.length})</summary>
@@ -495,6 +507,76 @@
           <p class="muted">Källor: invånare från <a href="https://www.wikidata.org/wiki/${esc(d.wikidata)}" target="_blank" rel="noopener">Wikidata</a>${d.invanareAr ? ` (${d.invanareAr})` : ''}, klimat från Open-Meteo.</p>
         </details>
       </article>`;
+  }
+
+  // ---------- Boenden (riktiga, från Google Places) ----------
+
+  const STAYS_FOR = 6; // boenden hämtas för de 6 bästa resmålen
+  const stays = { data: {}, status: 'idle', error: null, sig: '', run: 0 };
+  const CAT_LABEL = { hotel: 'Hotell', house: 'Hus/villa', apartment: 'Lägenhet' };
+
+  function fmtDist(m) {
+    return m < 1000 ? `${Math.round(m / 50) * 50} m` : `${(m / 1000).toFixed(1).replace('.', ',')} km`;
+  }
+
+  function stayCardHTML(st, d, ctx) {
+    const why = [];
+    if (st.typeOk) why.push(CAT_LABEL[st.cat]);
+    if (st.rating >= 4.5) why.push('mycket bra betyg'); else if (st.rating >= 4) why.push('bra betyg');
+    if (st.dist <= 1500) why.push('nära centrum');
+    const linkCtx = { ...ctx, stayCat: st.cat };
+    return `<li class="stay">
+      ${st.photo ? `<img src="${esc(RP.places.photoUrl(st.photo, 400))}" alt="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">`
+        : '<div class="stay-nophoto" aria-hidden="true">🏠</div>'}
+      <div class="stay-body">
+        <h3>${esc(st.name)}</h3>
+        <p class="stay-meta">${esc(st.typeLabel || CAT_LABEL[st.cat])} · ★ ${st.rating.toFixed(1).replace('.', ',')}
+          <span class="muted">(${S.formatInt(st.count)})</span> · ${fmtDist(st.dist)} från centrum</p>
+        ${why.length ? `<p class="stay-why">Matchar: ${why.join(', ')}</p>` : ''}
+        <div class="stay-actions">
+          <a class="btn primary small" href="${L.bookingStay(st.name, d.namn, linkCtx)}" target="_blank" rel="noopener">Visa på Booking</a>
+          ${st.website ? `<a class="btn secondary small" href="${esc(st.website)}" target="_blank" rel="noopener">Webbplats</a>` : ''}
+          ${st.maps ? `<a class="link-btn" href="${esc(st.maps)}" target="_blank" rel="noopener">Karta</a>` : ''}
+        </div>
+      </div>
+    </li>`;
+  }
+
+  function staysHTML(d, i, ctx) {
+    const head = '<h3 class="stays-head">Boenden här</h3>';
+    if (!RP.places.enabled()) {
+      return `${head}<p class="muted">Lägg in din Google-nyckel i panelen för att se riktiga boenden.</p>`;
+    }
+    if (location.protocol === 'file:' || i >= STAYS_FOR) return '';
+    const list = stays.data[d.id];
+    if (list === 'error') {
+      return `${head}<p class="callout warn"><span class="sym" aria-hidden="true">!</span>Kunde inte hämta boenden${stays.error ? ': ' + esc(stays.error) : ''}. Använd länkarna nedan.</p>`;
+    }
+    if (!list) return `${head}<p class="muted">Hämtar boenden från Google …</p>`;
+    if (!list.length) {
+      return `${head}<p class="callout">Google hittade inga boenden med tillräckligt många omdömen här. Använd länkarna nedan.</p>`;
+    }
+    return `${head}
+      <ul class="stays">${list.map((st) => stayCardHTML(st, d, ctx)).join('')}</ul>
+      <p class="muted small-print">Boenden och betyg från Google. Pris, lediga datum och antal rum ser du på Booking.</p>`;
+  }
+
+  async function ensureStays(res) {
+    if (!RP.places.enabled() || location.protocol === 'file:') return;
+    const sig = state.lodging.join(',');
+    if (stays.sig !== sig) { stays.data = {}; stays.sig = sig; }
+    const missing = res.included.slice(0, STAYS_FOR).map((r) => r.dest).filter((d) => !stays.data[d.id]);
+    if (!missing.length || stays.status === 'loading') return;
+    const run = ++stays.run;
+    stays.status = 'loading'; stays.error = null;
+    const out = await RP.places.fetchStays(missing, state.lodging);
+    if (run !== stays.run) return;
+    Object.assign(stays.data, out.data);
+    stays.status = 'done';
+    stays.error = out.error ? out.error.message : null;
+    // Misslyckade hämtningar markeras, så att sidan inte försöker om och om igen.
+    for (const d of missing) if (!out.data[d.id]) stays.data[d.id] = 'error';
+    if (state.view === 'results' && document.getElementById('resultsMain')) refreshResults(false, true);
   }
 
   function mainHTML(res, ctx) {
@@ -671,6 +753,7 @@
     const ctx = context();
     const res = S.rankDestinations(ALL, state, ctx, RP.places.enabled() ? places.data : null, SHORTLIST);
     if (!fromPlaces) ensurePlaces(res); // sätter status "Hämtar" innan sidan ritas
+    ensureStays(res);
     if (controlsToo) {
       document.getElementById('controls').innerHTML = controlsHTML();
       document.getElementById('cost').innerHTML = costHTML();
@@ -747,6 +830,11 @@
         places.data = {}; places.sig = '';
         renderResults();
         return;
+      case 'amenity': {
+        const k = btn.dataset.key;
+        state.amenities = state.amenities.includes(k) ? state.amenities.filter((x) => x !== k) : [...state.amenities, k];
+        break;
+      }
       case 'removeItem':
         state.nearby.splice(Number(btn.dataset.i), 1);
         break;

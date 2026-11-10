@@ -36,9 +36,9 @@ Nyckeln ligger inte i repot. Skriv in den på resultatsidan under **Google-nycke
 
 - [x] 1. Regionerna och `data/resmal.json`
 - [ ] 2. Spanien-felet och spridningsregeln
-- [ ] 3. Hus och villor från Google Places
-- [ ] 4. Smartare länkar
-- [ ] 5. LiteAPI
+- [x] 3. Riktiga boenden från Google Places: 4 per resmål för de 6 bästa, med bild, betyg, Booking-länk på boendets namn och egen webbplats (utan pris)
+- [~] 4. Smartare länkar: "Fler på Airbnb" skickar med bekvämligheter (pool, gym, wifi m.fl.). Airbnbs filter-id är inte testade än
+- [ ] 5. LiteAPI (vilande – inga nya konton just nu)
 - [ ] 6. Kostnadsdelningen per boende
 
 Havstemperaturen är borttagen (beslut 10 nov 2026). Strand i närheten täcker bad.

@@ -71,7 +71,7 @@
     return { calls: 0, max: cfg().maxCallsPerSearch || 80 };
   }
 
-  async function post(endpoint, body, budget) {
+  async function post(endpoint, body, budget, fields) {
     if (budget.calls >= budget.max) throw new LimitError('Gränsen för anrop nåddes');
     budget.calls++;
     const r = await fetch(API + endpoint, {
@@ -82,7 +82,7 @@
       headers: {
         'Content-Type': 'application/json',
         'X-Goog-Api-Key': getKey(),
-        'X-Goog-FieldMask': FIELDS
+        'X-Goog-FieldMask': fields || FIELDS
       },
       body: JSON.stringify(body)
     });
@@ -203,6 +203,110 @@
     return { data, calls: budget.calls, limited, error };
   }
 
+  // ---------- Boenden ----------
+
+  const STAY_FIELDS = [
+    'places.id', 'places.displayName', 'places.primaryType', 'places.primaryTypeDisplayName',
+    'places.rating', 'places.userRatingCount', 'places.location', 'places.websiteUri',
+    'places.googleMapsUri', 'places.photos'
+  ].join(',');
+  const SKIP_TYPES = ['hostel', 'campground', 'rv_park', 'mobile_home_park', 'camping_cabin', 'motel'];
+  const HOTEL_TYPES = ['hotel', 'resort_hotel', 'inn', 'bed_and_breakfast', 'extended_stay_hotel', 'japanese_inn'];
+  const HOUSE_TYPES = ['cottage', 'farmstay', 'guest_house', 'private_guest_room'];
+  const HOUSE_WORDS = /\b(villa|vila|casa|finca|chalet|house|house|haus|maison|cottage|holiday home|hus)\b/i;
+  const APT_WORDS = /\b(apartment|apartments|apartamentos?|appartamenti?|appartements?|suites?|residence|residenz|apartmány|flat|loft|studios?)\b/i;
+
+  /** hotel, house eller apartment, utifrån Googles typ och boendets namn. */
+  function category(p, fromVillaSearch) {
+    const name = (p.displayName && p.displayName.text) || '';
+    if (HOUSE_TYPES.includes(p.primaryType) || HOUSE_WORDS.test(name) || fromVillaSearch) return 'house';
+    if (APT_WORDS.test(name)) return 'apartment';
+    if (HOTEL_TYPES.includes(p.primaryType)) return 'hotel';
+    return 'hotel';
+  }
+
+  /**
+   * Hämtar riktiga boenden runt ett resmål från Google Places och rankar dem:
+   * rätt typ av boende, betyg, antal omdömen och närhet till centrum.
+   * Google vet inte priser, lediga datum eller antal rum.
+   */
+  async function staysFor(dest, wanted, budget) {
+    const key = `stays|${dest.lat.toFixed(4)},${dest.lng.toFixed(4)}|${wanted.slice().sort().join(',')}`;
+    let raw = cacheGet(key);
+    if (raw === undefined) {
+      const circle = (r) => ({ circle: { center: { latitude: dest.lat, longitude: dest.lng }, radius: r } });
+      const found = await post('searchNearby', {
+        includedTypes: ['lodging'], maxResultCount: 20, rankPreference: 'POPULARITY',
+        languageCode: 'sv', locationRestriction: circle(5000)
+      }, budget, STAY_FIELDS);
+      let villas = [];
+      if (wanted.includes('house')) {
+        villas = await post('searchText', {
+          textQuery: 'villa holiday rental', pageSize: 10, languageCode: 'sv', locationBias: circle(8000)
+        }, budget, STAY_FIELDS);
+      }
+      raw = [];
+      const seen = new Set();
+      for (const [list, isVilla] of [[found, false], [villas, true]]) {
+        for (const p of list) {
+          if (!p.location || seen.has(p.id) || SKIP_TYPES.includes(p.primaryType)) continue;
+          seen.add(p.id);
+          raw.push({
+            id: p.id,
+            name: (p.displayName && p.displayName.text) || 'Okänt namn',
+            cat: category(p, isVilla && !HOTEL_TYPES.includes(p.primaryType)),
+            typeLabel: (p.primaryTypeDisplayName && p.primaryTypeDisplayName.text) || null,
+            rating: p.rating || null,
+            count: p.userRatingCount || 0,
+            dist: distance(dest.lat, dest.lng, p.location.latitude, p.location.longitude),
+            website: p.websiteUri || null,
+            maps: p.googleMapsUri || null,
+            photo: p.photos && p.photos[0] ? p.photos[0].name : null
+          });
+        }
+      }
+      cacheSet(key, raw);
+    }
+    return rankStays(raw, wanted);
+  }
+
+  function rankStays(raw, wanted) {
+    return raw
+      .filter((s) => s.count >= 5 && s.rating !== null)
+      .map((s) => {
+        const typeOk = wanted.includes(s.cat);
+        const score =
+          (typeOk ? 0.4 : 0.1) +
+          0.35 * (s.rating / 5) +
+          0.15 * Math.min(1, Math.log10(s.count + 1) / 3) +
+          0.1 * Math.max(0, 1 - s.dist / 5000);
+        return { ...s, typeOk, score };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4);
+  }
+
+  function photoUrl(name, width) {
+    return `${API.replace('/places:', '/')}${name}/media?maxWidthPx=${width || 480}&key=${encodeURIComponent(getKey())}`;
+  }
+
+  /** Boenden för flera resmål. Returnerar { data: {destId: [boenden]}, calls, limited, error }. */
+  async function fetchStays(dests, wanted, onProgress) {
+    const budget = { calls: 0, max: Math.max(4, dests.length * 2) };
+    const data = {};
+    let limited = false, error = null;
+    for (const d of dests) {
+      try {
+        data[d.id] = await staysFor(d, wanted, budget);
+        if (onProgress) onProgress(budget.calls);
+      } catch (e) {
+        if (e instanceof LimitError) { limited = true; break; }
+        error = e; break;
+      }
+    }
+    return { data, calls: budget.calls, limited, error };
+  }
+
   root.RP = root.RP || {};
-  root.RP.places = { enabled, getKey, setKey, fetchNearby, radiusFor, distance };
+  root.RP.places = { enabled, getKey, setKey, fetchNearby, fetchStays, photoUrl, radiusFor, distance };
 })(window);

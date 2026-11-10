@@ -64,6 +64,19 @@
     { key: 'apartment', label: 'Lägenhet', icon: '🏢' }
   ];
 
+  // Bekvämligheter i boendet. airbnb = Airbnbs filter-id i söklänken (amenities[]).
+  // ID:na är kända från Airbnbs sökadresser men behöver testas en gång var.
+  const AMENITIES = [
+    { key: 'pool', label: 'Pool', icon: '🏊', airbnb: 7 },
+    { key: 'gym', label: 'Gym', icon: '🏋️', airbnb: 15 },
+    { key: 'wifi', label: 'Wifi', icon: '📶', airbnb: 4 },
+    { key: 'ac', label: 'Luftkonditionering', icon: '❄️', airbnb: 5 },
+    { key: 'kitchen', label: 'Kök', icon: '🍳', airbnb: 8 },
+    { key: 'parking', label: 'Gratis parkering', icon: '🅿️', airbnb: 9 },
+    { key: 'washer', label: 'Tvättmaskin', icon: '🧺', airbnb: 33 },
+    { key: 'hottub', label: 'Bubbelpool', icon: '♨️', airbnb: 25 }
+  ];
+
   const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli',
     'augusti', 'september', 'oktober', 'november', 'december'];
 
@@ -379,7 +392,7 @@
 
   const api = {
     WEIGHTS, SIZE_STEPS, SIZE_BOUNDS, LIFE_STEPS, LIFE_BOUNDS, TEMP_STEPS, TEMP_BOUNDS,
-    NEARBY_DEFAULTS, SPEED, MODE_LABEL, LODGING, MONTHS,
+    NEARBY_DEFAULTS, SPEED, MODE_LABEL, LODGING, AMENITIES, MONTHS,
     stepPosition, spanScore, rangeScore, distanceScore,
     nightsBetween, resolveDates, calcRooms, budgetPPN, splitCost,
     climateFor, scoreDestination, pickDestinations, rankDestinations, nearbyKey, formatKr, formatInt, formatMinutes
