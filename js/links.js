@@ -12,6 +12,11 @@
   const BOOKING_HT = { hotel: 204, house: 220, apartment: 201 };
   const CHILD_AGE = 8; // Booking kräver ålder per barn; standardval tills vi frågar
 
+  /** De önskemål om boendet som gruppen valt i steg 4. */
+  function chosen(ctx) {
+    return root.RP.scoring.AMENITIES.filter((a) => (ctx.amenities || []).includes(a.key));
+  }
+
   function query(area, dest) {
     const name = area.name.split(' – ')[0];
     return `${name}, ${dest.name}`;
@@ -19,7 +24,7 @@
 
   function booking(area, dest, ctx) {
     const p = new URLSearchParams();
-    p.set('ss', query(area, dest));
+    p.set('ss', [area.name.split(' – ')[0], area.region, dest.name].filter(Boolean).join(', '));
     if (ctx.dates.checkin) p.set('checkin', ctx.dates.checkin);
     if (ctx.dates.checkout) p.set('checkout', ctx.dates.checkout);
     p.set('group_adults', String(ctx.rooms.adults));
@@ -29,6 +34,7 @@
     p.set('no_rooms', String(onlyHotel ? ctx.rooms.bedrooms : 1));
     p.set('selected_currency', 'SEK');
     const nflt = ctx.lodging.map((k) => `ht_id=${BOOKING_HT[k]}`);
+    for (const a of chosen(ctx)) if (a.booking) nflt.push(a.booking);
     if (!onlyHotel) nflt.push(`entire_place_bedroom_count=${ctx.rooms.bedrooms}`);
     if (nflt.length) p.set('nflt', nflt.join(';'));
     return 'https://www.booking.com/searchresults.sv.html?' + p.toString();
@@ -71,8 +77,9 @@
     if (ctx.lodging.includes('house') || ctx.lodging.includes('apartment')) types.push('Entire home/apt');
     if (ctx.lodging.includes('hotel')) types.push('Hotel room');
     types.forEach((t) => p.append('room_types[]', t));
-    for (const a of root.RP.scoring.AMENITIES) {
-      if ((ctx.amenities || []).includes(a.key)) p.append('amenities[]', String(a.airbnb));
+    for (const a of chosen(ctx)) {
+      if (a.airbnb) p.append('amenities[]', String(a.airbnb));
+      if (a.airbnbParam) p.set(a.airbnbParam[0], a.airbnbParam[1]);
     }
     if (ctx.budgetPPN > 0 && ctx.dates.nights) {
       // Airbnb filtrerar på pris per natt för hela boendet
@@ -108,8 +115,10 @@
     }
     if (ctx.rooms.doubleBeds) list.push(`Minst ${ctx.rooms.doubleBeds} dubbelsängar för paren`);
     if (Number(prefs.group.ownRoom)) list.push(`${prefs.group.ownRoom} st vill ha eget rum`);
-    const am = root.RP.scoring.AMENITIES.filter((a) => (ctx.amenities || []).includes(a.key));
-    if (am.length) list.push(`Booking: välj ${am.map((a) => a.label.toLowerCase()).join(', ')} under Faciliteter`);
+    const noBooking = chosen(ctx).filter((a) => !a.booking);
+    if (noBooking.length) list.push(`Booking: välj ${noBooking.map((a) => a.label.toLowerCase()).join(', ')} bland filtren`);
+    const noAirbnb = chosen(ctx).filter((a) => !a.airbnb && !a.airbnbParam);
+    if (noAirbnb.length) list.push(`Airbnb: håll utkik efter ${noAirbnb.map((a) => a.label.toLowerCase()).join(', ')}`);
     if (ctx.budgetPPN > 0) {
       list.push(`Budget ca ${S.formatKr(ctx.budgetPPN)} per person och natt (Booking: ställ in pris själv)`);
     }

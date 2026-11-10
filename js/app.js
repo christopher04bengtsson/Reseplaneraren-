@@ -151,6 +151,14 @@
     </label>`;
   }
 
+  function amenityChips(group) {
+    return `<div class="chips">${S.AMENITIES.filter((a) => a.group === group).map((a) => {
+      const on = state.amenities.includes(a.key);
+      return `<button type="button" class="chip" data-action="amenity" data-key="${a.key}" aria-pressed="${on}">
+        <span aria-hidden="true">${a.icon}</span> ${a.label}${on ? ' <span aria-hidden="true">✓</span>' : ''}</button>`;
+    }).join('')}</div>`;
+  }
+
   // ---------- Levande uträkningar ----------
 
   const live = {
@@ -324,14 +332,10 @@
         Hus och villor brukar passa stora sällskap bäst.</p>
       <hr>
       <p class="field-label">Vad ska boendet ha?</p>
-      <p class="muted">Skickas med som filter till Airbnb.</p>
-      <div class="chips">
-        ${S.AMENITIES.map((a) => {
-          const on = state.amenities.includes(a.key);
-          return `<button type="button" class="chip" data-action="amenity" data-key="${a.key}" aria-pressed="${on}">
-            <span aria-hidden="true">${a.icon}</span> ${a.label}${on ? ' <span aria-hidden="true">✓</span>' : ''}</button>`;
-        }).join('')}
-      </div>`,
+      <p class="muted">Skickas med som filter till Booking och Airbnb.</p>
+      ${amenityChips('facility')}
+      <p class="field-label" style="margin-top:18px">Villkor</p>
+      ${amenityChips('terms')}`,
 
     // 5. Typ av ort
     () => `
@@ -626,10 +630,12 @@
       return `${head}<p class="callout warn"><span class="sym" aria-hidden="true">!</span>Kunde inte hämta boenden${stays.error ? ': ' + esc(stays.error) : ''}. Använd länkarna nedan.</p>`;
     }
     if (!list) return `${head}<p class="muted">Hämtar boenden från Google …</p>`;
-    if (!list.length) {
-      return `${head}<p class="callout">Google hittade inga boenden med tillräckligt många omdömen här. Använd länkarna nedan.</p>`;
+    const minR = Math.max(0, ...S.AMENITIES.filter((a) => a.minGoogleRating && state.amenities.includes(a.key)).map((a) => a.minGoogleRating));
+    const shown = list.filter((st) => st.rating >= minR);
+    if (!shown.length) {
+      return `${head}<p class="callout">Google hittade inga boenden här ${minR ? `med betyg ${String(minR).replace('.', ',')} eller högre ` : 'med tillräckligt många omdömen '}. Använd länkarna nedan.</p>`;
     }
-    const first = list.slice(0, 2), more = list.slice(2);
+    const first = shown.slice(0, 2), more = shown.slice(2);
     return `${head}
       <ul class="stays">${first.map((st) => stayCardHTML(st, d, ctx)).join('')}</ul>
       ${more.length ? `<details class="more-stays">

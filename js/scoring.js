@@ -64,17 +64,26 @@
     { key: 'apartment', label: 'Lägenhet', icon: '🏢' }
   ];
 
-  // Bekvämligheter i boendet. airbnb = Airbnbs filter-id i söklänken (amenities[]).
-  // ID:na är kända från Airbnbs sökadresser men behöver testas en gång var.
+  /*
+   * Önskemål om boendet, och hur de skickas till bokningssajterna.
+   *   airbnb:      Airbnbs filter-id (amenities[]=…)
+   *   airbnbParam: annan parameter i Airbnb-länken
+   *   booking:     Bookings filter i nflt=… (t.ex. hotelfacility=433)
+   * Saknas en kod för en sajt hamnar önskemålet i checklistan i stället.
+   * Koderna är kända från sajternas egna sökadresser men behöver testas en gång var.
+   */
   const AMENITIES = [
-    { key: 'pool', label: 'Pool', icon: '🏊', airbnb: 7 },
-    { key: 'gym', label: 'Gym', icon: '🏋️', airbnb: 15 },
-    { key: 'wifi', label: 'Wifi', icon: '📶', airbnb: 4 },
-    { key: 'ac', label: 'Luftkonditionering', icon: '❄️', airbnb: 5 },
-    { key: 'kitchen', label: 'Kök', icon: '🍳', airbnb: 8 },
-    { key: 'parking', label: 'Gratis parkering', icon: '🅿️', airbnb: 9 },
-    { key: 'washer', label: 'Tvättmaskin', icon: '🧺', airbnb: 33 },
-    { key: 'hottub', label: 'Bubbelpool', icon: '♨️', airbnb: 25 }
+    { key: 'pool', label: 'Pool', icon: '🏊', group: 'facility', airbnb: 7, booking: 'hotelfacility=433' },
+    { key: 'gym', label: 'Gym', icon: '🏋️', group: 'facility', airbnb: 15, booking: 'hotelfacility=11' },
+    { key: 'wifi', label: 'Wifi', icon: '📶', group: 'facility', airbnb: 4, booking: 'hotelfacility=107' },
+    { key: 'ac', label: 'Luftkonditionering', icon: '❄️', group: 'facility', airbnb: 5, booking: 'roomfacility=11' },
+    { key: 'parking', label: 'Parkering', icon: '🅿️', group: 'facility', airbnb: 9, booking: 'hotelfacility=2' },
+    { key: 'kitchen', label: 'Kök', icon: '🍳', group: 'facility', airbnb: 8 },
+    { key: 'washer', label: 'Tvättmaskin', icon: '🧺', group: 'facility', airbnb: 33 },
+    { key: 'hottub', label: 'Bubbelpool', icon: '♨️', group: 'facility', airbnb: 25 },
+    { key: 'breakfast', label: 'Frukost ingår', icon: '🥐', group: 'terms', airbnb: 16, booking: 'mealplan=1' },
+    { key: 'freecancel', label: 'Gratis avbokning', icon: '↩️', group: 'terms', airbnbParam: ['flexible_cancellation', 'true'], booking: 'fc=2' },
+    { key: 'rating8', label: 'Betyg minst 8 av 10', icon: '⭐', group: 'terms', booking: 'review_score=80', minGoogleRating: 4.0 }
   ];
 
   const MONTHS = ['januari', 'februari', 'mars', 'april', 'maj', 'juni', 'juli',
